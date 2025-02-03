@@ -17,7 +17,8 @@ const CREATE_SITE: &str = "\"New-IISSite -Name SkatWorkerAPI -BindingInformation
 const WD86_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/WebDeploy_x86_ru-RU.msi";
 const WD64_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/webdeploy_amd64_ru-RU.msi";
 
-pub fn is_installed() -> bool{
+#[no_mangle]
+pub extern "C" fn is_installed() -> bool{
     std::fs::exists("C:\\ScanKassWorker\\SkatWorkerAPI.exe").unwrap()
 }
 
@@ -40,7 +41,8 @@ fn architecture() -> String {
     std::env::var("PROCESSOR_ARCHITECTURE").unwrap()
 }
 
-pub async fn install() {
+#[no_mangle]
+pub async extern "C" fn install() {
     if is_installed() { panic!("Планировщик уже установлен") }
 
     let wd_url = match architecture().as_str() {
