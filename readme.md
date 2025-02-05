@@ -1,23 +1,19 @@
 # Библиотека для установки SkatWorkerAPI
 
-## Процесс внедрения в .NET проект
+## Методы присутствующие в библиотеке
 
-1) Добавить DLL-библиотеку в проект и включить копирование в выходной каталог
-2) В код добавить следующие строки:
-    ```csharp
-    // Для загрузки внешних библиотек, написанных на C/C++
-    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern nint LoadLibrary(string lpFileName);
-    // Установка SkatWorkerAPI
-    [DllImport("skatworker_installer.dll")]
-    public static extern Task install();
-    // Проверка на присутствие SkatWorkerAPI в системе
-    [DllImport("skatworker_installer.dll")]
-    public static extern bool is_installed();
-    ```
-3) Необходимо зарегистрировать библиотеку в коде: `LoadLibrary("skatworker_installer.dll");`
+- Install - асинхронный метод, скачивающий и устанавливающий SkatWorkerAPI и его зависимости и возвращает код (0 - успешно установлено)
+- IsInstalled - функция возвращает `true` если SkatWorkerAPI найден в системе, иначе `false`
 
-## Пример
+## Подводные камни
+
+- Поддерживается только Windows на архитектурах AMD64 и x86
+- Установка всех зависимостей SkatWorkerAPI производится не в "тихом" режиме
+- Если репозиторий (StarkovVV18/SkatWorker)[https://github.com/StarkovVV18/SkatWorker] станет закрытым, то от библиотеки не будет толку.
+- `IsInstalled` определяет присутствует ли файл `C:\ScanKassWorker\SkatWorkerAPI.exe`
+- Библиотека собрана только для x86-приложений
+
+## Пример внедрения в .NET Framework проект
 
 ```csharp
 using System.Runtime.InteropServices;
@@ -26,24 +22,22 @@ public static class Program
 {
     static void Main()
     {
-        Native.LoadLibrary("skatworker_installer.dll");
-        if (Native.is_installed())
+        if (SkatWorker.IsInstalled())
             Console.WriteLine("installed");
         else
-            Task.Run(Native.InstallSkatWorker);
+            SkatWorker.Install();
         Console.WriteLine("finish");
-    }
+    }  
 }
 
-internal static class Native
+internal static class SkatWorker
 {
-    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern nint LoadLibrary(string lpFileName);
+    public const string DllName = "skatworker_installer.dll";
+
+    [DllImport(DllName, EntryPoint = "install")]
+    public static extern int Install();
     
-    [DllImport("skatworker_installer.dll", EntryPoint = "install")]
-    public static extern Task InstallSkatWorker();
-    
-    [DllImport("skatworker_installer.dll", EntryPoint = "is_installed")]
+    [DllImport(DllName, EntryPoint = "install")]
     public static extern bool IsInstalled();
 }
 ```
