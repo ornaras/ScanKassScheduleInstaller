@@ -9,6 +9,7 @@ use futures_util::StreamExt;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 use winreg::RegKey;
+use tokio::runtime::Runtime;
 
 const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe"; // {5FEC97CA-FD93-392D-BF36-D9C3492A5698}
 const HOSTING_BUNDLE: &str = "https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe"; // {040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}
@@ -42,13 +43,17 @@ fn architecture() -> String {
 }
 
 #[no_mangle]
-pub async extern "C" fn install() {
-    if is_installed() { panic!("Планировщик уже установлен") }
+pub extern "C" fn install() -> i32 {
+    Runtime::new().unwrap().block_on(install_async())
+}
+
+async fn install_async() -> i32 {
+    if is_installed() { return 1; }
 
     let wd_url = match architecture().as_str() {
         "AMD64" => WD64_URL,
         "x86" => WD86_URL,
-        _ => panic!("НЕ УДАЛОСЬ ОПРЕДЕЛИТЬ АРХИТЕКТУРУ СИСТЕМЫ")
+        _ => return 2
     };
 
     if !exists_app("Microsoft ASP.NET Core 6.0.36 Shared Framework") {
@@ -65,6 +70,8 @@ pub async extern "C" fn install() {
     Command::new("powershell").arg("-Command").arg(CREATE_SITE).status().unwrap();
 
     install_skat_worker().await;
+
+    0
 }
 
 async fn download(url: &str, extension: &str) -> String {
@@ -134,7 +141,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        tokio::runtime::Runtime::new().unwrap().block_on(install());
+        install();
         assert_eq!(is_installed(), true);
     }
 }
