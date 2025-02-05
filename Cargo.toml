@@ -1,6 +1,7 @@
 [package]
-name = "skatworker-installer"
+name = "skatworker_installation"
 edition = "2021"
+version = "1.0.1"
 
 [lib]
 crate-type = ['cdylib']
