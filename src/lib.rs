@@ -5,7 +5,6 @@ use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
 use std::path::PathBuf;
 use runas::Command;
-use futures_util::StreamExt;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 use winreg::RegKey;
@@ -76,14 +75,12 @@ async fn install_async() -> i32 {
 async fn download(url: &str, extension: &str) -> String {
     let filename = format!("{0}.{1}", Alphanumeric.sample_string(&mut rand::rng(),16), extension);
     let filepath = format!("{0}{1}", temp_dir().display(), filename);
+    let client = reqwest::Client::new();
+    let mut response = client.get(url).send().await?;
     let mut file = File::create(filepath.clone()).expect("Не удалось создать файл");
 
-    let resp = reqwest::get(url).await.expect("Не удалось отправить HTTP-запрос");
-    let mut stream = resp.bytes_stream();
-
-    while let Some(result) = stream.next().await {
-        let chunk = result.unwrap();
-        file.write_all(&chunk).unwrap();
+    while let Some(chunk) = response.chunk().await? {
+        file.write_all(&chunk)?;
     }
 
     file.flush().unwrap();
