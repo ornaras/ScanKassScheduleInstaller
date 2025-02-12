@@ -1,7 +1,7 @@
 extern crate rand;
 
 use std::fs::File;
-use std::env::temp_dir;
+use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
 use std::path::PathBuf;
 use runas::Command;
@@ -13,8 +13,6 @@ use tokio::runtime::Runtime;
 
 const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe"; // {5FEC97CA-FD93-392D-BF36-D9C3492A5698}
 const HOSTING_BUNDLE: &str = "https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe"; // {040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}
-const ENABLE_IIS: &str = "\"Enable-WindowsOptionalFeature -Online -FeatureName IIS-ASPNET, IIS-ManagementConsole -All\"";
-const CREATE_SITE: &str = "\"New-IISSite -Name SkatWorkerAPI -BindingInformation '*:80:' -PhysicalPath '$env:systemdrive\\ScanKassWorker'\"";
 const WD86_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/WebDeploy_x86_ru-RU.msi";
 const WD64_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/webdeploy_amd64_ru-RU.msi";
 
@@ -66,8 +64,9 @@ async fn install_async() -> i32 {
 
     download_and_install(wd_url).await;
 
-    Command::new("powershell").arg("-Command").arg(ENABLE_IIS).status().unwrap();
-    Command::new("powershell").arg("-Command").arg(CREATE_SITE).status().unwrap();
+    Command::new("start").arg("/w").arg("pkgmgr").arg("/iu:IIS-WebServerRole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
+    Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
+    Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg(r#"/bindings:"http/*:80:"").arg(r#"/physicalPath:"C:\ScanKass\Workflow""#).arg("/applicationPool:ScanKass").status().unwrap(); // Создание сайта
 
     install_skat_worker().await;
 
