@@ -3,7 +3,7 @@ extern crate rand;
 use std::fs::File;
 use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
@@ -17,7 +17,7 @@ const WD64_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-1
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    std::fs::exists("C:\\ScanKassWorker\\SkatWorkerAPI.exe").unwrap()
+    Path::new("C:\\ScanKassWorker\\SkatWorkerAPI.exe").exists()
 }
 
 fn exists_app(pattern: &str) -> bool{
@@ -76,11 +76,11 @@ async fn download(url: &str, extension: &str) -> String {
     let filename = format!("{0}.{1}", Alphanumeric.sample_string(&mut rand::rng(),16), extension);
     let filepath = format!("{0}{1}", temp_dir().display(), filename);
     let client = reqwest::Client::new();
-    let mut response = client.get(url).send().await?;
+    let mut response = client.get(url).send().await.unwrap();
     let mut file = File::create(filepath.clone()).expect("Не удалось создать файл");
 
-    while let Some(chunk) = response.chunk().await? {
-        file.write_all(&chunk)?;
+    while let Some(chunk) = response.chunk().await.unwrap() {
+        file.write_all(&chunk).unwrap();
     }
 
     file.flush().unwrap();
