@@ -17,7 +17,7 @@ const WD64_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-1
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    Path::new("C:\\ScanKassWorker\\SkatWorkerAPI.exe").exists()
+    Path::new("C:\\ScanKass\\Workflow\\SkatWorkerAPI.exe").exists()
 }
 
 fn exists_app(pattern: &str) -> bool{
