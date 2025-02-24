@@ -2,9 +2,9 @@
 
 ## Методы присутствующие в библиотеке
 
-- bool is_installed() - возвращает `true` если SkatWorkerAPI найден в системе, иначе `false`
-- int install() - скачивание и тихая установка SkatWorkerAPI с зависимостями; возвращает код ошибки
-- int install(bool is_slient) - вариация метода install с настройкой режимом показа UI
+- **bool is_installed()** - возвращает `true` если SkatWorkerAPI найден в системе, иначе `false`
+- **int install()** - скачивание и тихая установка SkatWorkerAPI с зависимостями; возвращает код ошибки
+- **int install(bool is_slient)** - вариация метода install с настройкой показа UI установщиков зависимостей
 
 ## Поддерживаемые ОС
 
