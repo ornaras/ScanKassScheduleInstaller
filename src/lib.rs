@@ -41,10 +41,15 @@ fn architecture() -> String {
 
 #[no_mangle]
 pub extern "C" fn install() -> i32 {
-    Runtime::new().unwrap().block_on(install_async())
+    Runtime::new().unwrap().block_on(install_async(true))
 }
 
-async fn install_async() -> i32 {
+#[no_mangle]
+pub extern "C" fn install(is_slient: bool) -> i32 {
+    Runtime::new().unwrap().block_on(install_async(is_slient))
+}
+
+async fn install_async(is_slient: bool) -> i32 {
     if is_installed() { return 1; }
 
     let wd_url = match architecture().as_str() {
@@ -54,14 +59,14 @@ async fn install_async() -> i32 {
     };
 
     if !exists_app("Microsoft ASP.NET Core 6.0.36 Shared Framework") {
-        download_and_execute(ASPNET_URL).await;
+        download_and_execute(ASPNET_URL, is_slient).await;
     }
 
     if !exists_app("Microsoft ASP.NET Core 6.0.36 Hosting Bundle") {
-        download_and_execute(HOSTING_BUNDLE).await;
+        download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
 
-    download_and_install(wd_url).await;
+    download_and_install(wd_url, is_slient).await;
 
     Command::new("start").arg("/w").arg("pkgmgr").arg("/iu:IIS-WebServerRole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
@@ -88,15 +93,25 @@ async fn download(url: &str, extension: &str) -> String {
     filepath
 }
 
-async fn download_and_execute(url: &str) {
+async fn download_and_execute(url: &str, is_slient: bool) {
     let path = download(url, "exe").await;
-    Command::new(&path).arg("/install").arg("/passive").arg("/norestart").status().unwrap();
+    if is_slient {
+        let ui_mode = "/quiet";
+    }else{
+        let ui_mode = "/passive";
+    }
+    Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status().unwrap();
     std::fs::remove_file(&path).unwrap();
 }
 
-async fn download_and_install(url: &str) {
+async fn download_and_install(url: &str, is_slient: bool) {
     let path = download(url, "msi").await;
-    Command::new("msiexec").arg("/i").arg(path.as_str()).arg("/passive").arg("/norestart")
+    if is_slient {
+        let ui_mode = "/quiet";
+    }else{
+        let ui_mode = "/passive";
+    }
+    Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart")
         .status().unwrap();
     std::fs::remove_file(&path).unwrap();
 }
