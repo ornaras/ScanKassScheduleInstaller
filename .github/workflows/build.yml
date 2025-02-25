@@ -21,7 +21,7 @@ jobs:
         with:
           token: ${{secrets.TELEGRAMBOTTOKEN}}
           to: ${{secrets.TELEGRAMTARGETID}}
-          document: 'target/i686-pc-windows-msvc/release/skatworker_installation.dll'
+          document: 'target/release/skatworker_installation.dll'
       - name: Тестирование
         run: cargo test --lib --release tests
       - name: Отправка в Telegram (Успех)
