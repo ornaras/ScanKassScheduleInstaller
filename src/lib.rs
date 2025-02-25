@@ -67,8 +67,9 @@ async fn install_async(is_slient: bool) -> i32 {
     }
 
     download_and_install(wd_url, is_slient).await;
-
-    Command::new("start").arg("/w").arg("pkgmgr").arg("/iu:IIS-WebServerRole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
+    
+    //Command::new("start").arg("/w").arg("pkgmgr").arg("/iu:IIS-WebServerRole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI").status().unwrap(); // Активация IIS 7
+    Command::new("dism").arg("/online").arg("/enable-feature").arg("/featurename:IIS-WebServerRole").arg("/featurename:WAS-WindowsActivationService").arg("/featurename:WAS-ProcessModel").arg("/featurename:WAS-NetFxEnvironment").arg("/featurename:WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg(r#"/bindings:"http/*:80:"").arg(r#"/physicalPath:"C:\ScanKass\Workflow""#).arg("/applicationPool:ScanKass").status().unwrap(); // Создание сайта
 
