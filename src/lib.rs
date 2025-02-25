@@ -59,20 +59,27 @@ async fn install_async(is_slient: bool) -> i32 {
     };
 
     if !exists_app("Microsoft ASP.NET Core 6.0.36 Shared Framework") {
+        println!("Установка ASP.NET Core...");
         download_and_execute(ASPNET_URL, is_slient).await;
     }
 
     if !exists_app("Microsoft ASP.NET Core 6.0.36 Hosting Bundle") {
+        println!("Установка ASP.NET Core Hosting Bundle...");
         download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
 
+    println!("Установка Web Deploy...");
     download_and_install(wd_url, is_slient).await;
-    
+
+    println!("Активация IIS...");
     //Command::new("start").arg("/w").arg("pkgmgr").arg("/iu:IIS-WebServerRole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI").status().unwrap(); // Активация IIS 7
     Command::new("dism").arg("/online").arg("/enable-feature").arg("/featurename:IIS-WebServerRole").arg("/featurename:WAS-WindowsActivationService").arg("/featurename:WAS-ProcessModel").arg("/featurename:WAS-NetFxEnvironment").arg("/featurename:WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
+    
+    println!("Регистрация сайта...");
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg(r#"/bindings:"http/*:80:"").arg(r#"/physicalPath:"C:\ScanKass\Workflow""#).arg("/applicationPool:ScanKass").status().unwrap(); // Создание сайта
 
+    println!("Установка SkatWorkerAPI...");
     install_skat_worker().await;
 
     0
