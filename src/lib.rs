@@ -58,12 +58,12 @@ async fn install_async(is_slient: bool) -> i32 {
         _ => return 2
     };
 
-    if !exists_app("Microsoft ASP.NET Core 6.0.36 Shared Framework") {
+    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
         println!("Установка ASP.NET Core...");
         download_and_execute(ASPNET_URL, is_slient).await;
     }
 
-    if !exists_app("Microsoft ASP.NET Core 6.0.36 Hosting Bundle") {
+    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}") {
         println!("Установка ASP.NET Core Hosting Bundle...");
         download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
