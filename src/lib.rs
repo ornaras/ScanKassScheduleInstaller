@@ -1,6 +1,6 @@
 extern crate rand;
 
-use std::fs::{File, read_dir};
+use std::fs::File;
 use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
 use std::path::{PathBuf, Path};
@@ -59,28 +59,20 @@ async fn install_async(is_slient: bool) -> i32 {
     };
 
     if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
-        println!("Установка ASP.NET Core...");
         download_and_execute(ASPNET_URL, is_slient).await;
     }
 
     if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}") {
-        println!("Установка ASP.NET Core Hosting Bundle...");
         download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
 
-    println!("Установка Web Deploy...");
     download_and_install(wd_url, is_slient).await;
 
-    println!("Активация IIS...");
-    //Command::new("start").arg("/w").arg("pkgmgr").arg("/iu:IIS-WebServerRole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI").status().unwrap(); // Активация IIS 7
     Command::new("dism").arg("/online").arg("/enable-feature").arg("/featurename:IIS-WebServerRole").arg("/featurename:WAS-WindowsActivationService").arg("/featurename:WAS-ProcessModel").arg("/featurename:WAS-NetFxEnvironment").arg("/featurename:WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
-    
-    println!("Регистрация сайта...");
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg("/physicalPath:C:\\ScanKass\\Workflow").status().unwrap(); // Создание сайта
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
 
-    println!("Установка SkatWorkerAPI...");
     install_skat_worker().await;
 
     0
@@ -162,12 +154,6 @@ mod tests {
         let code = install();
         if code != 0 {
             panic!("Тест не пройден (Код: {code})")
-        }
-        println!();
-        let path = Path::new("C:\\ScanKass\\Workflow");
-        for entry in read_dir(path).expect("Unable to list") {
-            let entry = entry.expect("unable to get entry");
-            println!("{}", entry.path().display());
         }
         assert_eq!(is_installed(), true);
     }
