@@ -162,6 +162,12 @@ mod tests {
         if code != 0 {
             panic!("Тест не пройден (Код: {code})")
         }
+        println!();
+        let path = Path::new("C:\\ScanKass\\Workflow");
+        for entry in fs::read_dir(path).expect("Unable to list") {
+            let entry = entry.expect("unable to get entry");
+            println!("{}", entry.path().display());
+        }
         assert_eq!(is_installed(), true);
     }
 }
