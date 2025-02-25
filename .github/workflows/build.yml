@@ -1,4 +1,6 @@
-on: push
+on: 
+  push:
+    branches-ignore: [ 'v**.**.**' ]
 jobs:
   test:
     runs-on: windows-latest
