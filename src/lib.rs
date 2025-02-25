@@ -41,11 +41,11 @@ fn architecture() -> String {
 
 #[no_mangle]
 pub extern "C" fn install() -> i32 {
-    Runtime::new().unwrap().block_on(install_async(true))
+    adv_install(true)
 }
 
 #[no_mangle]
-pub extern "C" fn install(is_slient: bool) -> i32 {
+pub extern "C" fn adv_install(is_slient: bool) -> i32 {
     Runtime::new().unwrap().block_on(install_async(is_slient))
 }
 
@@ -95,10 +95,9 @@ async fn download(url: &str, extension: &str) -> String {
 
 async fn download_and_execute(url: &str, is_slient: bool) {
     let path = download(url, "exe").await;
+    let mut ui_mode = "/passive";
     if is_slient {
-        let ui_mode = "/quiet";
-    }else{
-        let ui_mode = "/passive";
+        ui_mode = "/quiet";
     }
     Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status().unwrap();
     std::fs::remove_file(&path).unwrap();
@@ -106,10 +105,9 @@ async fn download_and_execute(url: &str, is_slient: bool) {
 
 async fn download_and_install(url: &str, is_slient: bool) {
     let path = download(url, "msi").await;
+    let mut ui_mode = "/passive";
     if is_slient {
-        let ui_mode = "/quiet";
-    }else{
-        let ui_mode = "/passive";
+        ui_mode = "/quiet";
     }
     Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart")
         .status().unwrap();

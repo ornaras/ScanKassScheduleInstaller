@@ -4,7 +4,7 @@
 
 - **bool is_installed()** - возвращает `true` если SkatWorkerAPI найден в системе, иначе `false`
 - **int install()** - скачивание и тихая установка SkatWorkerAPI с зависимостями; возвращает код ошибки
-- **int install(bool is_slient)** - вариация метода install с настройкой показа UI установщиков зависимостей
+- **int adv_install(bool is_slient)** - вариация метода install с настройкой показа UI установщиков зависимостей
 
 ## Поддерживаемые ОС
 
