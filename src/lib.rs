@@ -158,7 +158,10 @@ mod tests {
 
     #[test]
     fn it_works() {
-        install();
+        let code = install();
+        if code != 0 {
+            panic!("Тест не пройден (Код: {code})")
+        }
         assert_eq!(is_installed(), true);
     }
 }
