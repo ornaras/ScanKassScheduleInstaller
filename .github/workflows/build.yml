@@ -34,11 +34,19 @@ jobs:
           to: ${{secrets.TELEGRAMTARGETID}}
           parse_mode: HTML
           message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Тест пройден успешно</a>
-      - name: Отправка в Telegram (Не удача)
-        if: ${{ failure() || cancelled() }}
+      - name: Отправка в Telegram (TimeOut)
+        if: ${{ cancelled() }}
         uses: aps-m/telegram-notify-action@v1
         with:
           token: ${{secrets.TELEGRAMBOTTOKEN}}
           to: ${{secrets.TELEGRAMTARGETID}}
           parse_mode: HTML
-          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Тест провален</a>
+          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Сценарий отменён</a>
+      - name: Отправка в Telegram (Не удача)
+        if: ${{ failure() }}
+        uses: aps-m/telegram-notify-action@v1
+        with:
+          token: ${{secrets.TELEGRAMBOTTOKEN}}
+          to: ${{secrets.TELEGRAMTARGETID}}
+          parse_mode: HTML
+          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Не удалось собрать библиотеку или тест провален</a>
