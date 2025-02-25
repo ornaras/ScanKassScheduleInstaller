@@ -21,8 +21,8 @@ jobs:
       - name: Отправка в Telegram
         uses: aps-m/telegram-notify-action@v1
         with:
-          token: ${{secret.TelegramBotToken}}
-          to: ${{secret.TelegramTargetId}}
+          token: ${{secrets.TELEGRAMBOTTOKEN}}
+          to: ${{secrets.TELEGRAMTARGETID}}
           message: format("{0} ({1})", 'Удачная сборка', ${{github.sha}})
           document: 'target/i686-pc-windows-msvc/release/skatworker_installation.dll'
 
