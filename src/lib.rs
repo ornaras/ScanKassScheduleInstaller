@@ -1,6 +1,6 @@
 extern crate rand;
 
-use std::fs::File;
+use std::fs::{File, read_dir};
 use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
 use std::path::{PathBuf, Path};
@@ -164,7 +164,7 @@ mod tests {
         }
         println!();
         let path = Path::new("C:\\ScanKass\\Workflow");
-        for entry in fs::read_dir(path).expect("Unable to list") {
+        for entry in read_dir(path).expect("Unable to list") {
             let entry = entry.expect("unable to get entry");
             println!("{}", entry.path().display());
         }
