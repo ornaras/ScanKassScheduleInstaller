@@ -14,16 +14,29 @@ jobs:
           cargo update native-tls --precise 0.2.13
           cargo update home --precise 0.5.9
           cargo update cargo --precise 0.75.1
-      - name: Тестирование
-        run: cargo test --lib --release tests
-      - name: Итоговая сборка
+      - name: Cборка
         run: cargo build --release
-      - name: Отправка в Telegram
+      - name: Отправка в Telegram (Сборка)
         uses: aps-m/telegram-notify-action@v1
         with:
           token: ${{secrets.TELEGRAMBOTTOKEN}}
           to: ${{secrets.TELEGRAMTARGETID}}
-          message: format("{0} ({1})", 'Удачная сборка', ${{github.sha}})
           document: 'target/i686-pc-windows-msvc/release/skatworker_installation.dll'
-
-    
+      - name: Тестирование
+        run: cargo test --lib --release tests
+      - name: Отправка в Telegram (Успех)
+        if: ${{ success() }}
+        uses: aps-m/telegram-notify-action@v1
+        with:
+          token: ${{secrets.TELEGRAMBOTTOKEN}}
+          to: ${{secrets.TELEGRAMTARGETID}}
+          parse_mode: HTML
+          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Тест пройден успешно</a>
+      - name: Отправка в Telegram (Не удача)
+        if: ${{ failure() || cancelled() }}
+        uses: aps-m/telegram-notify-action@v1
+        with:
+          token: ${{secrets.TELEGRAMBOTTOKEN}}
+          to: ${{secrets.TELEGRAMTARGETID}}
+          parse_mode: HTML
+          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Тест провален</a>
