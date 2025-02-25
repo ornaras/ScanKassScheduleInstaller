@@ -1,0 +1,29 @@
+on: push
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Установка Rust
+        uses: MatteoH2O1999/setup-rust@v1
+        with: 
+          channel: 1.75.0
+      - name: Загрузка репозитория
+        uses: actions/checkout@v4
+      - name: Исправление проблем версий
+        run: |
+          cargo update native-tls --precise 0.2.13
+          cargo update home --precise 0.5.9
+          cargo update cargo --precise 0.75.1
+      - name: Тестирование
+        run: cargo test --lib --release tests
+      - name: Итоговая сборка
+        run: cargo build --release
+      - name: Отправка в Telegram
+        uses: aps-m/telegram-notify-action@v1
+        with:
+          token: ${{secret.TelegramBotToken}}
+          to: ${{secret.TelegramTargetId}}
+          message: format("{0} ({1})", 'Удачная сборка', ${{github.sha}})
+          document: 'target/i686-pc-windows-msvc/release/skatworker_installation.dll'
+
+    
