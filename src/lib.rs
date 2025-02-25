@@ -77,7 +77,8 @@ async fn install_async(is_slient: bool) -> i32 {
     
     println!("Регистрация сайта...");
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
-    Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg(r#"/bindings:"http/*:80:""#).arg(r#"/physicalPath:"C:\ScanKass\Workflow""#).arg("/applicationPool:ScanKass").status().unwrap(); // Создание сайта
+    Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg("/physicalPath:C:\\ScanKass\\Workflow").status().unwrap(); // Создание сайта
+    Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
 
     println!("Установка SkatWorkerAPI...");
     install_skat_worker().await;
