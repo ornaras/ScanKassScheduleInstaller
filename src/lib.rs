@@ -1,5 +1,3 @@
-extern crate rand;
-
 use std::fs::File;
 use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
@@ -39,8 +37,9 @@ fn architecture() -> String {
     std::env::var("PROCESSOR_ARCHITECTURE").unwrap()
 }
 
-fn enable_features(features: vec<&str>) {
-    let mut proc = Command::new("dism").arg("/online").arg("/enable-feature");
+fn enable_features(features: Vec<&str>) {
+    let mut proc: Command = Command::new("dism");
+    proc.arg("/online").arg("/enable-feature");
     for feature in features{
         proc.arg(format!("/featurename:{0}", feature));
     }
@@ -76,12 +75,12 @@ async fn install_async(is_slient: bool) -> i32 {
 
     download_and_install(wd_url, is_slient).await;
 
-    enable_features(["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
+    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
     
     let app_inetsrv_path: String = var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD";
-    Command::new(app_inetsrv_path).arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
-    Command::new(app_inetsrv_path).arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg("/physicalPath:C:\\ScanKass\\Workflow").status().unwrap(); // Создание сайта
-    Command::new(app_inetsrv_path).arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
+    Command::new(&app_inetsrv_path).arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
+    Command::new(&app_inetsrv_path).arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg("/physicalPath:C:\\ScanKass\\Workflow").status().unwrap(); // Создание сайта
+    Command::new(&app_inetsrv_path).arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
 
     install_skat_worker().await;
 
