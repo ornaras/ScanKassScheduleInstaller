@@ -11,11 +11,6 @@ jobs:
           channel: 1.75.0
       - name: Загрузка репозитория
         uses: actions/checkout@v4
-      - name: Исправление проблем версий
-        run: |
-          cargo update native-tls --precise 0.2.13
-          cargo update home --precise 0.5.9
-          cargo update cargo --precise 0.75.1
       - name: Cборка
         run: cargo build --release
       - name: Отправка в Telegram (Сборка)
