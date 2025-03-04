@@ -136,10 +136,9 @@ async fn download_and_extract(url: &str) -> String {
     dir_path
 }
 
-async fn get_latest_release(owner: &str, repo: &str) -> String {
+async fn get_latest_release() -> String {
     let client = reqwest::Client::new();
-    let url = format!("https://api.github.com/repos/{0}/{1}/releases",owner,repo);
-    let resp = client.get(&url)
+    let resp = client.get("https://api.github.com/repos/StarkovVV18/SkatWorker/releases")
         .header("accept", "application/vnd.github+json")
         .header("User-Agent", "curl")
         .send().await.expect("Не удалось отправить запрос");
@@ -150,7 +149,7 @@ async fn get_latest_release(owner: &str, repo: &str) -> String {
 }
 
 async fn install_skat_worker(){
-    let url = get_latest_release("StarkovVV18", "SkatWorker").await;
+    let url = get_latest_release().await;
     let path = download_and_extract(url.as_str()).await;
     Command::new(format!("{}/SkatWorkerAPI.deploy.cmd", path)).arg("/Y").status().unwrap();
 }
