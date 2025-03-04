@@ -39,6 +39,14 @@ fn architecture() -> String {
     std::env::var("PROCESSOR_ARCHITECTURE").unwrap()
 }
 
+fn enable_features(features: vec<&str>) {
+    let mut proc = Command::new("dism").arg("/online").arg("/enable-feature");
+    for feature in features{
+        proc.arg(format!("/featurename:{0}", feature));
+    }
+    proc.status().unwrap();
+}
+
 #[no_mangle]
 pub extern "C" fn install() -> i32 {
     adv_install(true)
@@ -68,7 +76,7 @@ async fn install_async(is_slient: bool) -> i32 {
 
     download_and_install(wd_url, is_slient).await;
 
-    Command::new("dism").arg("/online").arg("/enable-feature").arg("/featurename:IIS-WebServerRole").arg("/featurename:WAS-WindowsActivationService").arg("/featurename:WAS-ProcessModel").arg("/featurename:WAS-NetFxEnvironment").arg("/featurename:WAS-ConfigurationAPI").status().unwrap(); // Активация IIS
+    enable_features(["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg("/physicalPath:C:\\ScanKass\\Workflow").status().unwrap(); // Создание сайта
     Command::new(var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD").arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
