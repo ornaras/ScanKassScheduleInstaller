@@ -1,6 +1,6 @@
 use std::fs::{OpenOptions, File};
 use std::env::{temp_dir, var};
-use std::io::{Cursor, Read, Write, Error};
+use std::io::{Cursor, Read, Write};
 use std::path::{PathBuf, Path};
 use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
@@ -21,10 +21,10 @@ pub extern "C" fn is_installed() -> bool{
     Path::new(format!("{}\\SkatWorkerAPI.exe", PATH)).exists()
 }
 
-fn exists_app(pattern: &str) -> bool{
+fn exists_app(pattern: &str, arch: String) -> bool{
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let mut soft = hklm.open_subkey("Software").unwrap();
-    if architecture() == "AMD64" {
+    if arch == "AMD64" {
         soft = soft.open_subkey("WOW6432Node").unwrap();
     }
     let apps = soft.open_subkey("Microsoft\\Windows\\CurrentVersion\\Uninstall").unwrap();
@@ -37,14 +37,13 @@ fn exists_app(pattern: &str) -> bool{
 }
 
 
-fn enable_features(features: Vec<&str>) -> Result<(), Error> {
+fn enable_features(features: Vec<&str>){
     let mut proc: Command = Command::new("dism");
     proc.arg("/online").arg("/enable-feature");
     for feature in features{
         proc.arg(format!("/featurename:{0}", feature));
     }
-    proc.status()?;
-    Ok(())
+    proc.status().unwrap();
 }
 
 #[no_mangle]
@@ -60,7 +59,9 @@ pub extern "C" fn adv_install(is_slient: bool) -> i32 {
 async fn install_async(is_slient: bool) -> i32 {
     if is_installed() { return 1; }
 
-    let wd_url = match var("PROCESSOR_ARCHITECTURE") {
+    let arch = var("PROCESSOR_ARCHITECTURE");
+
+    let wd_url = match arch {
         Err(_) => return 2,
         Ok(arch) => match arch.as_str(){
             "AMD64" => WD64_URL,
@@ -69,17 +70,17 @@ async fn install_async(is_slient: bool) -> i32 {
         }
     };
 
-    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
-        download_and_execute(ASPNET_URL, is_slient).await.unwarp();
+    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}", arch) {
+        download_and_execute(ASPNET_URL, is_slient).await;
     }
 
-    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}") {
-        download_and_execute(HOSTING_BUNDLE, is_slient).await.unwarp();
+    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}", arch) {
+        download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
 
-    download_and_install(wd_url, is_slient).await.unwarp();
+    download_and_install(wd_url, is_slient).await;
 
-    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]).unwarp();
+    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
     
     let app_inetsrv_path: String = var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD";
     Command::new(&app_inetsrv_path).arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
@@ -88,90 +89,87 @@ async fn install_async(is_slient: bool) -> i32 {
 
     install_skat_worker().await;
 
-    if configure().is_err() {
-        return 3;
-    }
+    configure();
 
     0
 }
 
-fn configure() -> Result<(), Error>{
-    let mut file = OpenOptions::new().read(true).write(true).open(format!("{}\\appsettings.json", PATH))?;
+fn configure(){
+    let mut file = OpenOptions::new().read(true).write(true).open(format!("{}\\appsettings.json", PATH)).unwarp();
     let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    let mut json: Value = serde_json::from_str(contents.as_str())?;
+    file.read_to_string(&mut contents).unwarp();
+    let mut json: Value = serde_json::from_str(contents.as_str()).unwarp();
     json["Settings"]["ConnectionString"] = Value::String(format!("Data Source={}\\db", PATH).to_string());
     json["Settings"]["PathToLog"] = Value::String("C:\\ScanKass\\LOG".to_string());
-    contents = serde_json::to_string(&json)?;
-    std::fs::remove_file(format!("{}\\appsettings.json", PATH))?;
-    let mut t = File::create(format!("{}\\appsettings.json", PATH))?;
-    File::write_all(&mut t, contents.as_bytes())?;
+    contents = serde_json::to_string(&json).unwarp();
+    std::fs::remove_file(format!("{}\\appsettings.json", PATH)).unwarp();
+    let mut t = File::create(format!("{}\\appsettings.json", PATH)).unwarp();
+    File::write_all(&mut t, contents.as_bytes()).unwarp();
 }
 
 
-async fn download(url: &str, extension: &str) -> Result<String,Error> {
+async fn download(url: &str, extension: &str) -> String {
     let filename = format!("{0}.{1}", Alphanumeric.sample_string(&mut rand::rng(),16), extension);
     let filepath = format!("{0}{1}", temp_dir().display(), filename);
     let client = reqwest::Client::new();
-    let mut response = client.get(url).send().await?;
-    let mut file = File::create(filepath.clone())?;
+    let mut response = client.get(url).send().await.unwarp();
+    let mut file = File::create(filepath.clone()).unwarp();
 
-    while let Some(chunk) = response.chunk().await? {
-        file.write_all(&chunk)?;
+    while let Some(chunk) = response.chunk().await.unwarp() {
+        file.write_all(&chunk).unwarp();
     }
 
-    file.flush()?;
+    file.flush().unwarp();
 
-    Ok(filepath)
+    filepath
 }
 
-async fn download_and_execute(url: &str, is_slient: bool) -> Result<(),Error> {
-    let path = download(url, "exe").await?;
+async fn download_and_execute(url: &str, is_slient: bool) {
+    let path = download(url, "exe").await.unwarp();
     let mut ui_mode = "/passive";
     if is_slient {
         ui_mode = "/quiet";
     }
-    Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status()?;
-    std::fs::remove_file(&path)?;
-    Ok(())
+    Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status().unwarp();
+    std::fs::remove_file(&path).unwarp();
 }
 
-async fn download_and_install(url: &str, is_slient: bool) -> Result<(),Error> {
-    let path = download(url, "msi").await?;
+async fn download_and_install(url: &str, is_slient: bool) {
+    let path = download(url, "msi").await.unwarp();
     let mut ui_mode = "/passive";
     if is_slient {
         ui_mode = "/quiet";
     }
-    Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart").status()?;
-    std::fs::remove_file(&path)?;
+    Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart").status().unwarp();
+    std::fs::remove_file(&path).unwarp();
 }
 
-async fn download_and_extract(url: &str) -> Result<String,Error> {
-    let path = download(url, "zip").await?;
-    let mut file = File::open(path)?;
+async fn download_and_extract(url: &str) -> String {
+    let path = download(url, "zip").await.unwarp();
+    let mut file = File::open(path).unwarp();
     let mut data: Vec<u8> = vec![];
-    file.read_to_end(&mut data)?;
+    file.read_to_end(&mut data).unwarp();
     let dir_path = format!("{0}{1}",temp_dir().display(),Alphanumeric.sample_string(&mut rand::rng(),16));
-    std::fs::create_dir_all(&dir_path)?;
-    zip_extract::extract(Cursor::new(&data), &PathBuf::from(&dir_path), true)?;
-    Ok(dir_path)
+    std::fs::create_dir_all(&dir_path).unwarp();
+    zip_extract::extract(Cursor::new(&data), &PathBuf::from(&dir_path), true).unwarp();
+    dir_path
 }
 
-async fn get_latest_release() -> Result<String, Error> {
+async fn get_latest_release() -> String {
     let client = reqwest::Client::new();
     let resp = client.get("https://api.github.com/repos/StarkovVV18/SkatWorker/releases")
         .header("accept", "application/vnd.github+json")
-        .header("User-Agent", "curl").send().await?;
-    let body = resp.text().await?;
-    let json_value: serde_json::Value = serde_json::from_str(&body)?;
+        .header("User-Agent", "curl").send().await.unwarp();
+    let body = resp.text().await.unwarp();
+    let json_value: serde_json::Value = serde_json::from_str(&body).unwarp();
     let res = format!("{}", json_value[0]["assets"][0]["browser_download_url"]);
-    Ok(res[1..res.len() - 1].to_string())
+    res[1..res.len() - 1].to_string()
 }
 
-async fn install_skat_worker() -> Result<(), Error>{
-    let url = get_latest_release().await?;
-    let path = download_and_extract(url.as_str()).await?;
-    Command::new(format!("{}/SkatWorkerAPI.deploy.cmd", path)).arg("/Y").status()?;
+async fn install_skat_worker() {
+    let url = get_latest_release().await.unwarp();
+    let path = download_and_extract(url.as_str()).await.unwarp();
+    Command::new(format!("{}/SkatWorkerAPI.deploy.cmd", path)).arg("/Y").status().unwarp();
 }
 
 #[cfg(test)]
