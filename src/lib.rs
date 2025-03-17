@@ -18,10 +18,10 @@ const PATH: &str = "C:\\ScanKass\\WORKFLOW";
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    Path::new(format!("{}\\SkatWorkerAPI.exe", PATH)).exists()
+    Path::new(format!("{}\\SkatWorkerAPI.exe", PATH).as_str()).exists()
 }
 
-fn exists_app(pattern: &str, arch: String) -> bool{
+fn exists_app(pattern: &str, arch: &String) -> bool{
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let mut soft = hklm.open_subkey("Software").unwrap();
     if arch == "AMD64" {
@@ -61,7 +61,7 @@ async fn install_async(is_slient: bool) -> i32 {
 
     let arch = var("PROCESSOR_ARCHITECTURE");
 
-    let wd_url = match arch {
+    let wd_url = match &arch {
         Err(_) => return 2,
         Ok(arch) => match arch.as_str(){
             "AMD64" => WD64_URL,
@@ -70,11 +70,12 @@ async fn install_async(is_slient: bool) -> i32 {
         }
     };
 
-    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}", arch) {
+    let arch_text = arch.unwrap();
+    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}", &arch_text) {
         download_and_execute(ASPNET_URL, is_slient).await;
     }
 
-    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}", arch) {
+    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}", &arch_text) {
         download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
 
@@ -125,7 +126,7 @@ async fn download(url: &str, extension: &str) -> String {
 }
 
 async fn download_and_execute(url: &str, is_slient: bool) {
-    let path = download(url, "exe").await.unwrap();
+    let path = download(url, "exe").await;
     let mut ui_mode = "/passive";
     if is_slient {
         ui_mode = "/quiet";
@@ -135,7 +136,7 @@ async fn download_and_execute(url: &str, is_slient: bool) {
 }
 
 async fn download_and_install(url: &str, is_slient: bool) {
-    let path = download(url, "msi").await.unwrap();
+    let path = download(url, "msi").await;
     let mut ui_mode = "/passive";
     if is_slient {
         ui_mode = "/quiet";
@@ -145,7 +146,7 @@ async fn download_and_install(url: &str, is_slient: bool) {
 }
 
 async fn download_and_extract(url: &str) -> String {
-    let path = download(url, "zip").await.unwrap();
+    let path = download(url, "zip").await;
     let mut file = File::open(path).unwrap();
     let mut data: Vec<u8> = vec![];
     file.read_to_end(&mut data).unwrap();
@@ -167,8 +168,8 @@ async fn get_latest_release() -> String {
 }
 
 async fn install_skat_worker() {
-    let url = get_latest_release().await.unwrap();
-    let path = download_and_extract(url.as_str()).await.unwrap();
+    let url = get_latest_release().await;
+    let path = download_and_extract(url.as_str()).await;
     Command::new(format!("{}/SkatWorkerAPI.deploy.cmd", path)).arg("/Y").status().unwrap();
 }
 
