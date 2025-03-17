@@ -12,10 +12,11 @@ const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/p
 const HOSTING_BUNDLE: &str = "https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe"; // {040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}
 const WD86_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/WebDeploy_x86_ru-RU.msi";
 const WD64_URL: &str = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/webdeploy_amd64_ru-RU.msi";
+const PATH: &str = "C:\\ScanKass\\WORKFLOW";
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    Path::new("C:\\ScanKass\\Workflow\\SkatWorkerAPI.exe").exists()
+    Path::new(format!("{}\\SkatWorkerAPI.exe", PATH)).exists()
 }
 
 fn exists_app(pattern: &str) -> bool{
@@ -80,7 +81,7 @@ async fn install_async(is_slient: bool) -> i32 {
     
     let app_inetsrv_path: String = var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD";
     Command::new(&app_inetsrv_path).arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
-    Command::new(&app_inetsrv_path).arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg("/physicalPath:C:\\ScanKass\\Workflow").status().unwrap(); // Создание сайта
+    Command::new(&app_inetsrv_path).arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg(format!("/physicalPath:{}",PATH)).status().unwrap(); // Создание сайта
     Command::new(&app_inetsrv_path).arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
 
     install_skat_worker().await;
