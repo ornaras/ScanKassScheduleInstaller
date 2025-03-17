@@ -33,9 +33,6 @@ fn exists_app(pattern: &str) -> bool{
     false
 }
 
-fn architecture() -> String {
-    std::env::var("PROCESSOR_ARCHITECTURE").unwrap()
-}
 
 fn enable_features(features: Vec<&str>) {
     let mut proc: Command = Command::new("dism");
@@ -59,10 +56,13 @@ pub extern "C" fn adv_install(is_slient: bool) -> i32 {
 async fn install_async(is_slient: bool) -> i32 {
     if is_installed() { return 1; }
 
-    let wd_url = match architecture().as_str() {
+    let wd_url = match var("PROCESSOR_ARCHITECTURE") {
+        Err(_) => return 2,
+        Ok(arch) => match arch.as_str(){
         "AMD64" => WD64_URL,
         "x86" => WD86_URL,
         _ => return 2
+        }
     };
 
     if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
