@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::env::{temp_dir, var};
-use std::io::{Cursor, Read, Write};
+use std::io::{Cursor, Read, Write, Error};
 use std::path::{PathBuf, Path};
 use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
@@ -34,13 +34,14 @@ fn exists_app(pattern: &str) -> bool{
 }
 
 
-fn enable_features(features: Vec<&str>) {
+fn enable_features(features: Vec<&str>) -> Result<(), Error> {
     let mut proc: Command = Command::new("dism");
     proc.arg("/online").arg("/enable-feature");
     for feature in features{
         proc.arg(format!("/featurename:{0}", feature));
     }
-    proc.status().unwrap();
+    proc.status()?;
+    Ok(())
 }
 
 #[no_mangle]
@@ -66,16 +67,16 @@ async fn install_async(is_slient: bool) -> i32 {
     };
 
     if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
-        download_and_execute(ASPNET_URL, is_slient).await;
+        download_and_execute(ASPNET_URL, is_slient).await.unwarp();
     }
 
     if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}") {
-        download_and_execute(HOSTING_BUNDLE, is_slient).await;
+        download_and_execute(HOSTING_BUNDLE, is_slient).await.unwarp();
     }
 
-    download_and_install(wd_url, is_slient).await;
+    download_and_install(wd_url, is_slient).await.unwarp();
 
-    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
+    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]).unwarp();
     
     let app_inetsrv_path: String = var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD";
     Command::new(&app_inetsrv_path).arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
@@ -87,70 +88,69 @@ async fn install_async(is_slient: bool) -> i32 {
     0
 }
 
-async fn download(url: &str, extension: &str) -> String {
+async fn download(url: &str, extension: &str) -> Result<String,Error> {
     let filename = format!("{0}.{1}", Alphanumeric.sample_string(&mut rand::rng(),16), extension);
     let filepath = format!("{0}{1}", temp_dir().display(), filename);
     let client = reqwest::Client::new();
-    let mut response = client.get(url).send().await.unwrap();
-    let mut file = File::create(filepath.clone()).expect("Не удалось создать файл");
+    let mut response = client.get(url).send().await?;
+    let mut file = File::create(filepath.clone())?;
 
-    while let Some(chunk) = response.chunk().await.unwrap() {
-        file.write_all(&chunk).unwrap();
+    while let Some(chunk) = response.chunk().await? {
+        file.write_all(&chunk)?;
     }
 
-    file.flush().unwrap();
+    file.flush()?;
 
-    filepath
+    Ok(filepath)
 }
 
-async fn download_and_execute(url: &str, is_slient: bool) {
-    let path = download(url, "exe").await;
+async fn download_and_execute(url: &str, is_slient: bool) -> Result<(),Error> {
+    let path = download(url, "exe").await?;
     let mut ui_mode = "/passive";
     if is_slient {
         ui_mode = "/quiet";
     }
-    Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status().unwrap();
-    std::fs::remove_file(&path).unwrap();
+    Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status()?;
+    std::fs::remove_file(&path)?;
+    Ok(())
 }
 
-async fn download_and_install(url: &str, is_slient: bool) {
-    let path = download(url, "msi").await;
+async fn download_and_install(url: &str, is_slient: bool) -> Result<(),Error> {
+    let path = download(url, "msi").await?;
     let mut ui_mode = "/passive";
     if is_slient {
         ui_mode = "/quiet";
     }
-    Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart")
-        .status().unwrap();
-    std::fs::remove_file(&path).unwrap();
+    Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart").status()?;
+    std::fs::remove_file(&path)?;
 }
 
-async fn download_and_extract(url: &str) -> String {
-    let path = download(url, "zip").await;
-    let mut file = File::open(path).unwrap();
+async fn download_and_extract(url: &str) -> Result<String,Error> {
+    let path = download(url, "zip").await?;
+    let mut file = File::open(path)?;
     let mut data: Vec<u8> = vec![];
-    file.read_to_end(&mut data).unwrap();
+    file.read_to_end(&mut data)?;
     let dir_path = format!("{0}{1}",temp_dir().display(),Alphanumeric.sample_string(&mut rand::rng(),16));
-    std::fs::create_dir_all(&dir_path).unwrap();
-    zip_extract::extract(Cursor::new(&data), &PathBuf::from(&dir_path), true).unwrap();
-    dir_path
+    std::fs::create_dir_all(&dir_path)?;
+    zip_extract::extract(Cursor::new(&data), &PathBuf::from(&dir_path), true)?;
+    Ok(dir_path)
 }
 
-async fn get_latest_release() -> String {
+async fn get_latest_release() -> Result<String, Error> {
     let client = reqwest::Client::new();
     let resp = client.get("https://api.github.com/repos/StarkovVV18/SkatWorker/releases")
         .header("accept", "application/vnd.github+json")
-        .header("User-Agent", "curl")
-        .send().await.expect("Не удалось отправить запрос");
-    let body = resp.text().await.expect("Не удалось получить тело ответа");
-    let json_value: serde_json::Value = serde_json::from_str(&body).unwrap();
+        .header("User-Agent", "curl").send().await?;
+    let body = resp.text().await?;
+    let json_value: serde_json::Value = serde_json::from_str(&body)?;
     let res = format!("{}", json_value[0]["assets"][0]["browser_download_url"]);
-    res[1..res.len() - 1].to_string()
+    Ok(res[1..res.len() - 1].to_string())
 }
 
-async fn install_skat_worker(){
-    let url = get_latest_release().await;
-    let path = download_and_extract(url.as_str()).await;
-    Command::new(format!("{}/SkatWorkerAPI.deploy.cmd", path)).arg("/Y").status().unwrap();
+async fn install_skat_worker() -> Result<(), Error>{
+    let url = get_latest_release().await?;
+    let path = download_and_extract(url.as_str()).await?;
+    Command::new(format!("{}/SkatWorkerAPI.deploy.cmd", path)).arg("/Y").status()?;
 }
 
 #[cfg(test)]
