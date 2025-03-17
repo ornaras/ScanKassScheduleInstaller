@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{OpenOptions, File};
 use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write, Error};
 use std::path::{PathBuf, Path};
@@ -7,6 +7,8 @@ use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 use winreg::RegKey;
 use tokio::runtime::Runtime;
+use serde_json::Value;
+use std::io::prelude::*;
 
 const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe"; // {5FEC97CA-FD93-392D-BF36-D9C3492A5698}
 const HOSTING_BUNDLE: &str = "https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe"; // {040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}
@@ -61,9 +63,9 @@ async fn install_async(is_slient: bool) -> i32 {
     let wd_url = match var("PROCESSOR_ARCHITECTURE") {
         Err(_) => return 2,
         Ok(arch) => match arch.as_str(){
-        "AMD64" => WD64_URL,
-        "x86" => WD86_URL,
-        _ => return 2
+            "AMD64" => WD64_URL,
+            "x86" => WD86_URL,
+            _ => return 2
         }
     };
 
@@ -86,8 +88,26 @@ async fn install_async(is_slient: bool) -> i32 {
 
     install_skat_worker().await;
 
+    if configure().is_err() {
+        return 3;
+    }
+
     0
 }
+
+fn configure() -> Result<(), Error>{
+    let mut file = OpenOptions::new().read(true).write(true).open(format!("{}\\appsettings.json", PATH))?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    let mut json: Value = serde_json::from_str(contents.as_str())?;
+    json["Settings"]["ConnectionString"] = Value::String(format!("Data Source={}\\db", PATH).to_string());
+    json["Settings"]["PathToLog"] = Value::String("C:\\ScanKass\\LOG".to_string());
+    contents = serde_json::to_string(&json)?;
+    std::fs::remove_file(format!("{}\\appsettings.json", PATH))?;
+    let mut t = File::create(format!("{}\\appsettings.json", PATH))?;
+    File::write_all(&mut t, contents.as_bytes())?;
+}
+
 
 async fn download(url: &str, extension: &str) -> Result<String,Error> {
     let filename = format!("{0}.{1}", Alphanumeric.sample_string(&mut rand::rng(),16), extension);
