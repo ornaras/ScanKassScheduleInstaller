@@ -8,11 +8,11 @@ jobs:
       - name: Установка Rust
         uses: MatteoH2O1999/setup-rust@v1
         with: 
-          channel: 1.75.0
+          channel: 1.75.0-i686-pc-windows-msvc
       - name: Загрузка репозитория
         uses: actions/checkout@v4
       - name: Cборка
-        run: cargo build --release
+        run: cargo +1.75.0-i686-pc-windows-msvc build --release
       - name: Отправка в Telegram (Сборка)
         uses: aps-m/telegram-notify-action@v1
         with:
