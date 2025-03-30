@@ -2,27 +2,40 @@ on:
   push:
     branches-ignore: [ 'v**.**.**' ]
   workflow_dispatch:
+
 jobs:
   test:
     runs-on: windows-latest
     steps:
       - name: Установка Rust
-        uses: MatteoH2O1999/setup-rust@v1
-        with: 
-          channel: 1.75.0-i686-pc-windows-msvc
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.75.0-i686-pc-windows-msvc
+          override: true
+          components: clippy, rustfmt
+
+      - name: Кеширование Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
       - name: Загрузка репозитория
         uses: actions/checkout@v4
+
       - name: Cборка
-        run: cargo +1.75.0-i686-pc-windows-msvc build --release
+        run: cargo build --release
+
       - name: Тестирование
         run: cargo test --release --lib
-      - name: Перенос артефактов
-        run: |
-            mkdir artifacts
-            move target\release\deps\*.exe artifacts
-            move target\release\skatworker_installation.dll artifacts
+
       - name: Выгрузка артефактов
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v4
         with:
-          path: artifacts
-        
+          name: build-artifacts
+          path: target/release/**/*.{exe,dll}
