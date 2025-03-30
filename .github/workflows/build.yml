@@ -33,9 +33,14 @@ jobs:
 
       - name: Тестирование
         run: cargo test --release --lib
+        
+      - name: Перенос артефактов
+        run: |
+             mkdir artifacts
+             move target\release\deps\*.exe artifacts
+             move target\release\skatworker_installation.dll artifacts
 
       - name: Выгрузка артефактов
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
-          path: target/release/**/*.{exe,dll}
+          path: artifacts
