@@ -22,15 +22,15 @@ pub extern "C" fn is_installed() -> bool{
     Path::new(format!("{}\\SkatWorkerAPI.exe", PATH).as_str()).exists()
 }
 
-fn exists_app(pattern: &str, arch: &String) -> bool{
+fn exists_app(pattern: &str) -> bool{
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let mut soft = hklm.open_subkey("Software").unwrap();
-    if arch == "AMD64" {
-        soft = soft.open_subkey("WOW6432Node").unwrap();
-    }
-    let apps = soft.open_subkey("Microsoft\\Windows\\CurrentVersion\\Uninstall").unwrap();
-    for i in apps.enum_keys().map(|x| x.unwrap()) {
-        if i.starts_with(pattern) {
+    let pathes = vec!(
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall", 
+        "Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall");
+    for path in pathes{
+        let p = format!("{}\\{}", path, pattern);
+        let res = hklm.open_subkey(p);
+        if res.is_ok(){
             return true;
         }
     }
@@ -70,12 +70,11 @@ async fn install_async(is_slient: bool) -> i32 {
             _ => return 2
     };
 
-    let arch_text = arch;
-    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}", &arch_text) {
+    if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
         download_and_execute(ASPNET_URL, is_slient).await;
     }
 
-    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}", &arch_text) {
+    if !exists_app("{040F8B83-B3BA-303A-A5BC-FE3E7FC0093B}") {
         download_and_execute(HOSTING_BUNDLE, is_slient).await;
     }
 
