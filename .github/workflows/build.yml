@@ -1,6 +1,7 @@
 on: 
   push:
     branches-ignore: [ 'v**.**.**' ]
+  workflow_dispatch:
 jobs:
   test:
     runs-on: windows-latest
@@ -13,35 +14,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Cборка
         run: cargo +1.75.0-i686-pc-windows-msvc build --release
-      - name: Отправка в Telegram (Сборка)
-        uses: aps-m/telegram-notify-action@v1
-        with:
-          token: ${{secrets.TELEGRAMBOTTOKEN}}
-          to: ${{secrets.TELEGRAMTARGETID}}
-          document: 'target/release/skatworker_installation.dll'
       - name: Тестирование
-        run: cargo test --lib --release tests
-      - name: Отправка в Telegram (Успех)
-        if: ${{ success() }}
-        uses: aps-m/telegram-notify-action@v1
+        run: cargo test --release
+      - name: Перенос артефактов
+        run: |
+            mkdir artifacts
+            move target\release\deps\*.exe artifacts
+            move target\release\skatworker_installation.dll artifacts
+      - name: Выгрузка артефактов
+        uses: actions/upload-artifact@v4.6.2
         with:
-          token: ${{secrets.TELEGRAMBOTTOKEN}}
-          to: ${{secrets.TELEGRAMTARGETID}}
-          parse_mode: HTML
-          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Тест пройден успешно</a>
-      - name: Отправка в Telegram (TimeOut)
-        if: ${{ cancelled() }}
-        uses: aps-m/telegram-notify-action@v1
-        with:
-          token: ${{secrets.TELEGRAMBOTTOKEN}}
-          to: ${{secrets.TELEGRAMTARGETID}}
-          parse_mode: HTML
-          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Сценарий отменён</a>
-      - name: Отправка в Telegram (Не удача)
-        if: ${{ failure() }}
-        uses: aps-m/telegram-notify-action@v1
-        with:
-          token: ${{secrets.TELEGRAMBOTTOKEN}}
-          to: ${{secrets.TELEGRAMTARGETID}}
-          parse_mode: HTML
-          message: <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">Не удалось собрать библиотеку или тест провален</a>
+          path: artifacts
+        
