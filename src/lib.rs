@@ -2,6 +2,7 @@ use std::fs::{OpenOptions, File};
 use std::env::{temp_dir, var};
 use std::io::{Cursor, Read, Write};
 use std::path::{PathBuf, Path};
+use whoami::arch;
 use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
@@ -59,18 +60,17 @@ pub extern "C" fn adv_install(is_slient: bool) -> i32 {
 async fn install_async(is_slient: bool) -> i32 {
     if is_installed() { return 1; }
 
-    let arch = var("PROCESSOR_ARCHITECTURE");
+    let arch = format!("{:?}", arch());
 
-    let wd_url = match &arch {
-        Err(_) => return 2,
-        Ok(arch) => match arch.as_str(){
-            "AMD64" => WD64_URL,
-            "x86" => WD86_URL,
+    let wd_url = match arch.as_str(){
+        "X64" => WD64_URL,
+        "i686" => WD86_URL,
+        "i586" => WD86_URL,
+        "i386" => WD86_URL,
             _ => return 2
-        }
     };
 
-    let arch_text = arch.unwrap();
+    let arch_text = arch;
     if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}", &arch_text) {
         download_and_execute(ASPNET_URL, is_slient).await;
     }
