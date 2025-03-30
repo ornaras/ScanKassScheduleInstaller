@@ -18,23 +18,7 @@ const PATH: &str = "C:\\ScanKass\\WORKFLOW";
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    match get_or_create_runtime(){
-        RuntimeHandle::H(h) => return h.block_on(is_installed_async()),
-        RuntimeHandle::RT(rt) => return rt.block_on(is_installed_async()),
-    };
-    false
-}
-
-async fn is_installed_async() -> bool {
-    
-    if !Path::new(format!("{}\\SkatWorkerAPI.exe", PATH).as_str()).exists() {
-        let cl = reqwest::Client::new();
-        let resp = cl.get("http://localhost/api/Schedule/list").send().await;
-        if resp.is_ok() {
-            return resp.unwrap().status() == reqwest::StatusCode::OK;
-        }
-    }
-    false
+    Path::new(format!("{}\\SkatWorkerAPI.exe", PATH).as_str()).exists()
 }
 
 fn exists_app(pattern: &str) -> bool{
@@ -62,19 +46,6 @@ fn enable_features(features: Vec<&str>){
     proc.status().unwrap();
 }
 
-enum RuntimeHandle{
-    RT(Runtime),
-    H(Handle)
-}
-
-fn get_or_create_runtime() -> RuntimeHandle{
-    let h = Handle::try_current();
-    if h.is_ok() {
-        return RuntimeHandle::H(h.unwrap())
-    }
-    RuntimeHandle::RT(Runtime::new().unwrap())
-}
-
 #[no_mangle]
 pub extern "C" fn install() -> i32 {
     adv_install(true)
@@ -82,11 +53,7 @@ pub extern "C" fn install() -> i32 {
 
 #[no_mangle]
 pub extern "C" fn adv_install(is_slient: bool) -> i32 {
-    match get_or_create_runtime(){
-        RuntimeHandle::H(h) => return h.block_on(install_async(is_slient)),
-        RuntimeHandle::RT(rt) => return rt.block_on(install_async(is_slient)),
-    };
-    -1
+    Runtime::new().unwrap().block_on(install_async(is_slient))
 }
 
 async fn install_async(is_slient: bool) -> i32 {
@@ -99,9 +66,9 @@ async fn install_async(is_slient: bool) -> i32 {
         "i686" => WD86_URL,
         "i586" => WD86_URL,
         "i386" => WD86_URL,
-            _ => return 2
+        _ => return 2
     };
-
+    
     if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
         download_and_execute(ASPNET_URL, is_slient).await;
     }
@@ -165,7 +132,6 @@ async fn download_and_execute(url: &str, is_slient: bool) {
         ui_mode = "/quiet";
     }
     Command::new(&path).arg("/install").arg(ui_mode).arg("/norestart").status().unwrap();
-    std::fs::remove_file(&path).unwrap();
 }
 
 async fn download_and_install(url: &str, is_slient: bool) {
@@ -175,7 +141,6 @@ async fn download_and_install(url: &str, is_slient: bool) {
         ui_mode = "/quiet";
     }
     Command::new("msiexec").arg("/i").arg(path.as_str()).arg(ui_mode).arg("/norestart").status().unwrap();
-    std::fs::remove_file(&path).unwrap();
 }
 
 async fn download_and_extract(url: &str) -> String {
