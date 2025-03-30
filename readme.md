@@ -6,6 +6,9 @@
 - **int install()** - скачивание и тихая установка SkatWorkerAPI с зависимостями; возвращает код ошибки
 - **int adv_install(bool is_slient)** - вариация метода install с настройкой показа UI установщиков зависимостей
 
+## Зависимости
+- [Visual C++ 2015-2022 Redistributable (x86)](https://aka.ms/vs/17/release/vc_redist.x86.exe)
+
 ## Поддерживаемые ОС
 
 - Windows 10 (x86/amd64)
