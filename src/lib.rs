@@ -7,7 +7,7 @@ use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 use winreg::RegKey;
-use tokio::runtime::Handle;
+use tokio::runtime::{Handle, Runtime};
 use serde_json::Value;
 
 const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe"; // {5FEC97CA-FD93-392D-BF36-D9C3492A5698}
@@ -18,7 +18,11 @@ const PATH: &str = "C:\\ScanKass\\WORKFLOW";
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    Handle::current().block_on(is_installed_async())
+    match get_or_create_runtime(){
+        RuntimeHandle::H(h) => return h.block_on(is_installed_async()),
+        RuntimeHandle::RT(rt) => return rt.block_on(is_installed_async()),
+    };
+    false
 }
 
 async fn is_installed_async() -> bool {
@@ -58,6 +62,19 @@ fn enable_features(features: Vec<&str>){
     proc.status().unwrap();
 }
 
+enum RuntimeHandle{
+    RT(Runtime),
+    H(Handle)
+}
+
+fn get_or_create_runtime() -> RuntimeHandle{
+    let h = Handle::try_current();
+    if h.is_ok() {
+        return RuntimeHandle::H(h.unwrap())
+    }
+    RuntimeHandle::RT(Runtime::new().unwrap())
+}
+
 #[no_mangle]
 pub extern "C" fn install() -> i32 {
     adv_install(true)
@@ -65,7 +82,11 @@ pub extern "C" fn install() -> i32 {
 
 #[no_mangle]
 pub extern "C" fn adv_install(is_slient: bool) -> i32 {
-    Handle::current().block_on(install_async(is_slient))
+    match get_or_create_runtime(){
+        RuntimeHandle::H(h) => return h.block_on(install_async(is_slient)),
+        RuntimeHandle::RT(rt) => return rt.block_on(install_async(is_slient)),
+    };
+    -1
 }
 
 async fn install_async(is_slient: bool) -> i32 {
