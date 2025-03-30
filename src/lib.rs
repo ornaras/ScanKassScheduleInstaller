@@ -7,7 +7,7 @@ use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 use winreg::RegKey;
-use tokio::runtime::Runtime;
+use tokio::runtime::Handle;
 use serde_json::Value;
 
 const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe"; // {5FEC97CA-FD93-392D-BF36-D9C3492A5698}
@@ -18,7 +18,7 @@ const PATH: &str = "C:\\ScanKass\\WORKFLOW";
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    Runtime::new().unwrap().block_on(is_installed_async())
+    Handle::current().block_on(is_installed_async())
 }
 
 async fn is_installed_async() -> bool {
@@ -65,7 +65,7 @@ pub extern "C" fn install() -> i32 {
 
 #[no_mangle]
 pub extern "C" fn adv_install(is_slient: bool) -> i32 {
-    Runtime::new().unwrap().block_on(install_async(is_slient))
+    Handle::current().block_on(install_async(is_slient))
 }
 
 async fn install_async(is_slient: bool) -> i32 {
