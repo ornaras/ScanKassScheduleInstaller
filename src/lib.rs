@@ -19,7 +19,19 @@ const PATH: &str = "C:\\ScanKass\\WORKFLOW";
 
 #[no_mangle]
 pub extern "C" fn is_installed() -> bool{
-    Path::new(format!("{}\\SkatWorkerAPI.exe", PATH).as_str()).exists()
+    Runtime::new().unwrap().block_on(is_installed_async())
+}
+
+async fn is_installed_async() -> bool {
+    
+    if !Path::new(format!("{}\\SkatWorkerAPI.exe", PATH).as_str()).exists() {
+        let cl = reqwest::Client::new();
+        let resp = cl.get("http://localhost/api/Schedule/list").send().await;
+        if resp.is_ok() {
+            return resp.unwrap().status() == reqwest::StatusCode::OK;
+        }
+    }
+    false
 }
 
 fn exists_app(pattern: &str) -> bool{
@@ -180,6 +192,9 @@ mod tests {
 
     #[test]
     fn it_works() {
+        if is_installed(){
+            panic!("Тест не пройден (is_installed неправильно работает)")
+        }
         let code = install();
         if code != 0 {
             panic!("Тест не пройден (Код: {code})")
