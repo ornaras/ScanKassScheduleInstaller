@@ -68,7 +68,9 @@ async fn install_async(is_slient: bool) -> i32 {
         "i386" => WD86_URL,
         _ => return 2
     };
-    
+
+    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
+
     if !exists_app("{215198BD-8EE1-385D-8194-0D3FF304296D}") {
         download_and_execute(ASPNET_URL, is_slient).await;
     }
@@ -78,8 +80,6 @@ async fn install_async(is_slient: bool) -> i32 {
     }
 
     download_and_install(wd_url, is_slient).await;
-
-    enable_features(vec!["IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel","WAS-NetFxEnvironment","WAS-ConfigurationAPI"]);
     
     let app_inetsrv_path: String = var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD";
     Command::new(&app_inetsrv_path).arg("stop").arg("site").arg("http://*:80").status().unwrap(); // Выключение всех сайтов на порту 80
