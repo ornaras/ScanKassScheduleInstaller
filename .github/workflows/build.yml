@@ -33,14 +33,25 @@ jobs:
 
       - name: Тестирование
         run: cargo test --release --lib
-        
-      - name: Перенос артефактов
-        run: |
-             mkdir artifacts
-             move target\release\deps\*.exe artifacts
-             move target\release\skatworker_installation.dll artifacts
 
-      - name: Выгрузка артефактов
+      - name: Выгрузка тестового дистрибутива
+        uses: actions/upload-artifact@v4
+        id: test
+        with:
+          name: skatworker_installation.exe
+          path: target\release\deps\*.exe          
+          overwrite: true
+          
+      - name: Выгрузка библиотеки
         uses: actions/upload-artifact@v4
         with:
-          path: artifacts
+          path: target\release\skatworker_installation.dll
+          overwrite: true
+
+      - name: Send message
+        uses: aps-m/telegram-notify-action@v1
+        with:
+          token: ${{ secrets.TELEGRAMBOTTOKEN }}
+          to: ${{ secrets.TELEGRAMTARGETID }}
+          message: 'Первичный тест установщика планировщика пройден успешно! <a href="${{ steps.test.outputs.artifact-url }}">Скачать тестовый образ</a>'
+          parse_mode: 'HTML'
