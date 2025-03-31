@@ -7,7 +7,7 @@ use runas::Command;
 use rand::distr::{Alphanumeric, SampleString};
 use winreg::enums::HKEY_LOCAL_MACHINE;
 use winreg::RegKey;
-use tokio::runtime::{Handle, Runtime};
+use tokio::runtime::Runtime;
 use serde_json::Value;
 
 const ASPNET_URL: &str = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe"; // {5FEC97CA-FD93-392D-BF36-D9C3492A5698}

@@ -38,13 +38,14 @@ jobs:
         uses: actions/upload-artifact@v4
         id: test
         with:
-          name: skatworker_installation.exe
+          name: test
           path: target\release\deps\*.exe          
           overwrite: true
           
       - name: Выгрузка библиотеки
         uses: actions/upload-artifact@v4
         with:
+          name: lib
           path: target\release\skatworker_installation.dll
           overwrite: true
 
