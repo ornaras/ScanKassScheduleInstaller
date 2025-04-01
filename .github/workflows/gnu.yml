@@ -3,7 +3,7 @@ on:
 
 jobs:
   test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Установка Rust
         uses: actions-rs/toolchain@v1
@@ -28,6 +28,9 @@ jobs:
 
       - name: Cборка
         run: cargo build --release
+
+      - name: Тест
+        run: cargo test --release --lib
 
       - name: Выгрузка тестового дистрибутива
         uses: actions/upload-artifact@v4
