@@ -12,6 +12,12 @@ jobs:
           override: true
           components: clippy, rustfmt
 
+      - name: Install MSYS2 and MinGW
+        run: |
+          choco install -y msys2
+          refreshenv
+          ridk install 3
+
       - name: Загрузка репозитория
         uses: actions/checkout@v4
 
