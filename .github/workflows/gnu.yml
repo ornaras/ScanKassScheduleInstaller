@@ -3,34 +3,26 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Установка Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.75.0-i686-pc-windows-gnu
+          toolchain: 1.75.0
           override: true
           components: clippy, rustfmt
-
-      - name: Кеширование Cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            cargo-${{ runner.os }}-
 
       - name: Загрузка репозитория
         uses: actions/checkout@v4
 
+      - name: add target
+        run: rustup target add i686-pc-windows-gnu
+
       - name: Cборка
-        run: cargo build --release
+        run: cargo build --release --target i686-pc-windows-gnu
 
       - name: Тест
-        run: cargo test --release --lib
+        run: cargo test --release --lib --target i686-pc-windows-gnu
 
       - name: Выгрузка тестового дистрибутива
         uses: actions/upload-artifact@v4
