@@ -11,12 +11,13 @@ jobs:
           toolchain: 1.75.0
           override: true
           components: clippy, rustfmt
-
-      - name: Install MSYS2 and MinGW
-        run: |
-          choco install -y msys2
-          refreshenv
-          ridk install 3
+          
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          path-type: minimal
+          install: >-
+            mingw-w64-i686-toolchain
 
       - name: Загрузка репозитория
         uses: actions/checkout@v4
