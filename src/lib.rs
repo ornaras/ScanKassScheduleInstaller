@@ -82,9 +82,8 @@ async fn install_async(is_slient: bool) -> i32 {
     download_and_install(wd_url, is_slient).await;
     
     let app_inetsrv_path: String = var("WINDIR").unwrap() + "\\system32\\inetsrv\\APPCMD";
-    Command::new(&app_inetsrv_path).arg("stop").arg("site").arg("http://*:80").status().unwrap(); // Выключение всех сайтов на порту 80
     Command::new(&app_inetsrv_path).arg("add").arg("apppool").arg("/name:ScanKass").arg("/processModel.identityType:LocalSystem").status().unwrap(); // Создание отдельного пула
-    Command::new(&app_inetsrv_path).arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:80:").arg(format!("/physicalPath:{}",PATH)).status().unwrap(); // Создание сайта
+    Command::new(&app_inetsrv_path).arg("add").arg("site").arg("/name:SkatWorkerAPI").arg("/bindings:http/*:16160:").arg(format!("/physicalPath:{}",PATH)).status().unwrap(); // Создание сайта
     Command::new(&app_inetsrv_path).arg("set").arg("app").arg("SkatWorkerAPI/").arg("/applicationPool:ScanKass").status().unwrap(); // Присвоение пула
     Command::new(&app_inetsrv_path).arg("start").arg("site").arg("SkatWorkerAPI").status().unwrap(); // Запуск сайта
 
