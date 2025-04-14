@@ -1,0 +1,179 @@
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ScanKass
+{
+    public static class SchedulerInstaller
+    {
+        public static bool IsInstalled
+        {
+            get
+            {
+                LogInfo("Производиться проверка...");
+                var path = Path.Combine(Constants.PathDir, "SkatWorkerAPI.exe");
+                if (!File.Exists(path))
+                {
+                    LogWarning($"Планировщик не установлен: не найден файл {path}");
+                    return false;
+                }
+                using (var http = new HttpClient())
+                {
+                    try
+                    {
+                        var resp = http.GetAsync($"http://localhost:{Constants.TcpPort}/api/Schedule/list").Result;
+                        if (!resp.IsSuccessStatusCode) throw new Exception();
+                    }
+                    catch
+                    {
+                        LogWarning($"Планировщик не установлен: не удалось получить список действий");
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        public static event Action<int, string, Exception> Logging;
+
+        internal static void LogError(string text, Exception ex = null) => Logging?.Invoke(2, text, ex);
+        internal static void LogWarning(string text, Exception ex = null) => Logging?.Invoke(1, text, ex);
+        internal static void LogInfo(string text) => Logging?.Invoke(0, text, null);
+
+        private static Guid guidASPNet = new Guid(Constants.GuidAspNet);
+        private static Guid guidHostBundle = new Guid(Constants.GuidHostBundle);
+        private static Guid guidWebDeploy = new Guid(Constants.GuidWebDeploy);
+
+        public static async Task InstallAsync()
+        {
+            string pathLatest = null, pathScript = null, pathASPNet = null, pathHostBundle = null, pathWebDeploy = null;
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)4080;
+            LogInfo("Началась установка планировщика...");
+            try
+            {
+                LogInfo("Активация дополнительных компонентов Windows...");
+                EnableFeatures("IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel",
+                    "WAS-NetFxEnvironment", "WAS-ConfigurationAPI");
+
+                var http = new HttpClient();
+
+                LogInfo("Поиск ASP.Net Core 6.0.36...");
+                if (!guidASPNet.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry64))
+                {
+                    pathASPNet = await http.DownloadAsync(Constants.UrlAspNet);
+                    LogInfo("Установка ASP.Net Core 6.0.36...");
+                    RunEXE(pathASPNet);
+                }
+
+                LogInfo("Поиск Hosting Bundle 6.0.36...");
+                if (!guidHostBundle.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32))
+                {
+                    pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
+                    LogInfo("Установка Hosting Bundle 6.0.36...");
+                    RunEXE(pathHostBundle);
+                }
+
+                LogInfo("Поиск Microsoft Web Deploy 4.0...");
+                if (!guidWebDeploy.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32) &&
+                    !guidWebDeploy.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry64))
+                {
+                    pathWebDeploy = await http.DownloadAsync(string.Format(Constants.UrlWebDeploy, Environment.Is64BitOperatingSystem ? "amd64" : "x86"));
+                    LogInfo("Установка Microsoft Web Deploy 4.0...");
+                    RunMSI(pathWebDeploy);
+                }
+
+                LogInfo("Регистрация сайта в IIS...");
+                RunAppcmd($"add site /name:SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}: /physicalPath:{Constants.PathDir}");
+                LogInfo("Настройка работы сайта...");
+                RunAppcmd("add apppool /name:ScanKass /processModel.identityType:LocalSystem");
+                RunAppcmd("set app SkatWorkerAPI/ /applicationPool:ScanKass");
+                LogInfo("Запуск сайта...");
+                RunAppcmd("start site SkatWorkerAPI");
+
+                var urlLatest = await http.GetLatestReleaseAsync();
+                pathLatest = await http.DownloadAsync(urlLatest);
+                pathScript = Unzip(pathLatest);
+                LogInfo("Развертывание планировщика...");
+                Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
+
+                Configure();
+
+                LogInfo("Установка планироащика завершена!");
+            }
+            catch(Exception ex)
+            {
+                LogError("Установка планироащика принудительно завершена!", ex);
+            }
+            finally
+            {
+                LogInfo("Очистка временных файлов...");
+                RemoveFile(pathASPNet);
+                RemoveFile(pathHostBundle);
+                RemoveFile(pathWebDeploy);
+                RemoveFile(pathLatest);
+                if (!(pathScript is null) && Directory.Exists(pathScript))
+                    Directory.Delete(pathScript, true);
+                LogInfo("Очистка временных файлов завершена!");
+            }
+        }
+
+        private static void RemoveFile(string filepath)
+        {
+            if (!(filepath is null) && File.Exists(filepath))
+                File.Delete(filepath);
+        }
+
+        private static void EnableFeatures(params string[] features)
+        {
+            var args = new StringBuilder("/online /enable-feature");
+            foreach (var feature in features)
+                args.Append($" /featurename:{feature}");
+            Run("dism", args.ToString());
+        }
+
+        private static void RunEXE(string path) => Run(path, "/install /quiet /norestart");
+        private static void RunMSI(string path) => Run("msiexec", $"/i {path} /quiet /norestart");
+        private static void RunAppcmd(string args) => Run(Constants.PathInetcmd, args);
+        private static string Unzip(string path)
+        {
+            LogInfo($"Распаковка файла {Path.GetFileName(path)}...");
+            string dir;
+            do
+            {
+                dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()).Replace(".", "");
+            } while (Directory.Exists(dir));
+            Directory.CreateDirectory(dir);
+            using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                new ZipArchive(stream, ZipArchiveMode.Read).ExtractToDirectory(dir);
+            return dir;
+        }
+
+        private static void Configure()
+        {
+            LogInfo("Настройка планировщика...");
+            var path = Path.Combine(Constants.PathDir, "appsettings.json");
+            var config = File.ReadAllText(path);
+            var json = JObject.Parse(config);
+
+            json["Settings"]["ConnectionString"] = Path.Combine(Constants.PathDir, "db");
+            json["Settings"]["PathToLog"] = Constants.PathLog;
+
+            File.Delete(path);
+            File.WriteAllText(path, json.ToString());
+        }
+
+        internal static void Run(string program, string args)
+        {
+            var pInfo = new ProcessStartInfo(program, args) { 
+                Verb = "runas",
+            };
+            Process.Start(pInfo).WaitForExit();
+        }
+    }
+}

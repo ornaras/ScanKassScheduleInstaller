@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchedulerInstaller", "SchedulerInstaller\SchedulerInstaller.csproj", "{4EE9E772-DF16-42CE-8B74-33FAACD28EF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{E2962A21-AA1B-45EF-BB28-63CD8C9D2346}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4EE9E772-DF16-42CE-8B74-33FAACD28EF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EE9E772-DF16-42CE-8B74-33FAACD28EF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EE9E772-DF16-42CE-8B74-33FAACD28EF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EE9E772-DF16-42CE-8B74-33FAACD28EF0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2962A21-AA1B-45EF-BB28-63CD8C9D2346}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2962A21-AA1B-45EF-BB28-63CD8C9D2346}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2962A21-AA1B-45EF-BB28-63CD8C9D2346}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2962A21-AA1B-45EF-BB28-63CD8C9D2346}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
