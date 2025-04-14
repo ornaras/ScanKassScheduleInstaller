@@ -10,8 +10,14 @@ using System.Threading.Tasks;
 
 namespace ScanKass
 {
+    /// <summary>
+    /// Установщик планировщика
+    /// </summary>
     public static class SchedulerInstaller
     {
+        /// <summary>
+        /// true, если планировщик установлен и отвечает на запросы, иначе false
+        /// </summary>
         public static bool IsInstalled
         {
             get
@@ -40,6 +46,13 @@ namespace ScanKass
             }
         }
 
+        /// <summary>
+        /// Событие логирования<br/>
+        /// Параметры:<br/>
+        /// 1) Уровень сообщения (0 - Info, 1 - Warning, 2 - Error)<br/>
+        /// 2) Текст сообщения<br/>
+        /// 3) Исключение
+        /// </summary>
         public static event Action<int, string, Exception> Logging;
 
         internal static void LogError(string text, Exception ex = null) => Logging?.Invoke(2, text, ex);
@@ -50,6 +63,9 @@ namespace ScanKass
         private static Guid guidHostBundle = new Guid(Constants.GuidHostBundle);
         private static Guid guidWebDeploy = new Guid(Constants.GuidWebDeploy);
 
+        /// <summary>
+        /// Установка планировщика
+        /// </summary>
         public static async Task InstallAsync()
         {
             string pathLatest = null, pathScript = null, pathASPNet = null, pathHostBundle = null, pathWebDeploy = null;
