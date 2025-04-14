@@ -5,6 +5,9 @@
 - **bool IsInstalled** - возвращает `true` если SkatWorkerAPI найден в системе и отвечает на запросы, иначе `false`
 - **Task InstallAsync()** - асинхронный метод, скачивающий, устанавливающий и настраивающий SkatWorkerAPI 
 - **Action<int, string, Exception> Logging** - событие логирования
+  - Уровень сообщения (0 - Информация, 1 - Внимание, 2 - Ошибка)
+  - Текст сообщения
+  - Исключение
 
 ## Зависимости
 - [Newtonsoft.Json 13.0.3](https://www.nuget.org/packages/Newtonsoft.Json/13.0.3)
