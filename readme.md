@@ -44,7 +44,7 @@ public static class Program
                 _level = "[???]";
                 break;
         }
-        Console.WriteLine($"{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss} {_level} {t}");
+        Console.WriteLine($"{DateTime.Now:yyyy'-'MM'-'dd'T'HH':'mm':'ss} {_level} {text}");
         if(!(ex is null)) Console.WriteLine($"{ex}");
     }
 }
