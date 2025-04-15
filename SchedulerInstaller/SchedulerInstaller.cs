@@ -54,6 +54,10 @@ namespace ScanKass
         /// 3) Исключение
         /// </summary>
         public static event Action<int, string, Exception> Logging;
+        /// <summary>
+        /// Событие, выполняющееся после установки планировщика
+        /// </summary>
+        public static event Action<bool> OnDone;
 
         internal static void LogError(string text, Exception ex = null) => Logging?.Invoke(2, text, ex);
         internal static void LogWarning(string text, Exception ex = null) => Logging?.Invoke(1, text, ex);
@@ -120,10 +124,12 @@ namespace ScanKass
 
                 Configure();
 
+                OnDone?.Invoke(true);
                 LogInfo("Установка планировщика завершена!");
             }
             catch(Exception ex)
             {
+                OnDone?.Invoke(false);
                 LogError("Установка планировщика принудительно завершена!", ex);
             }
             finally
