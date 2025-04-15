@@ -177,7 +177,7 @@ namespace ScanKass
             var config = File.ReadAllText(path);
             var json = JObject.Parse(config);
 
-            json["Settings"]["ConnectionString"] = Path.Combine(Constants.PathDir, "db");
+            json["Settings"]["ConnectionString"] = $"Data Source = {Path.Combine(Constants.PathDir, "db")}";
             json["Settings"]["PathToLog"] = Constants.PathLog;
 
             File.Delete(path);
