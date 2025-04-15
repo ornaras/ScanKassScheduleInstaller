@@ -17,6 +17,7 @@
 
 ```csharp
 using System;
+using System.Net.Http;
 using ScanKass;
 
 public static class Program
@@ -59,10 +60,9 @@ public static class Program
         try {
             using (var http = new HttpClient())
             {
-                var resp = http.GetAsync().Result;
-                if(resp.IsSuccessStatusCode)
-                    Logging(0, "Тест успешно завершён!")
-                Logging(2, "Тест не пройден!")
+                var resp = http.GetAsync("http://localhost:16160/api/Schedule/list").Result;
+                if(!resp.IsSuccessStatusCode) throw new Exception();
+                Logging(0, "Тест успешно завершён!")
             }
         }
         catch
