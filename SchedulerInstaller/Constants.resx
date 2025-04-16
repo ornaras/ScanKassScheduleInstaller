@@ -135,6 +135,9 @@
   <data name="PathDism" xml:space="preserve">
     <value>C:\Windows\system32\dism.exe</value>
   </data>
+  <data name="PathDism64" xml:space="preserve">
+    <value>C:\Windows\SysNative\dism.exe</value>
+  </data>
   <data name="PathInetcmd" xml:space="preserve">
     <value>C:\Windows\system32\inetsrv\appcmd.exe</value>
   </data>

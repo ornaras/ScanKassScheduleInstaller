@@ -115,6 +115,15 @@ namespace ScanKass {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на C:\Windows\SysNative\dism.exe.
+        /// </summary>
+        internal static string PathDism64 {
+            get {
+                return ResourceManager.GetString("PathDism64", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на C:\Windows\system32\inetsrv\appcmd.exe.
         /// </summary>
         internal static string PathInetcmd {

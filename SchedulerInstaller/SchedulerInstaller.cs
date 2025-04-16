@@ -156,7 +156,7 @@ namespace ScanKass
             var args = new StringBuilder("/online /enable-feature");
             foreach (var feature in features)
                 args.Append($" /featurename:{feature}");
-            Run("dism", args.ToString());
+            Run(Environment.Is64BitOperatingSystem ? Constants.PathDism64 : Constants.PathDism, args.ToString());
         }
 
         private static void RunEXE(string path) => Run(path, "/install /quiet /norestart");
@@ -192,8 +192,13 @@ namespace ScanKass
 
         internal static void Run(string program, string args)
         {
-            var pInfo = new ProcessStartInfo(program, args) { 
-                Verb = "runas",
+            LogInfo($"Запуск \"{program} {args}\"...");
+
+            var pInfo = new ProcessStartInfo(program, args)
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                Verb = "runas"
             };
             Process.Start(pInfo).WaitForExit();
         }
