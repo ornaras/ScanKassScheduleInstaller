@@ -158,7 +158,7 @@ namespace ScanKass
             const string nameMutex = "Global\\_MSIExecute";
             do
             {
-                if(Mutex.TryOpenExisting(nameMutex, out _))
+                if(!Mutex.TryOpenExisting(nameMutex, out _))
                 {
                     Run("msiexec", $"/i {path} /quiet /norestart");
                     break;
