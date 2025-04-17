@@ -72,6 +72,12 @@ namespace ScanKass
         /// </summary>
         public static async Task InstallAsync()
         {
+#if DEBUG
+            Logging += (l, t, e) => {
+                if (!(e is null))
+                    File.AppendAllText("C:\\ScanKass\\LOG\\-_-.log", $"{e}\n");
+            };
+#endif
             string pathLatest = null, pathScript = null, pathASPNet = null, pathHostBundle = null, pathWebDeploy = null;
             ServicePointManager.SecurityProtocol = (SecurityProtocolType)4080;
             LogInfo("Началась установка планировщика...");
@@ -203,9 +209,28 @@ namespace ScanKass
             {
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Verb = "runas"
+                Verb = "runas",
+#if DEBUG
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+#endif
             };
-            Process.Start(pInfo).WaitForExit();
+            var proc = new Process(){ StartInfo = pInfo };
+            proc.Start();
+
+#if DEBUG
+            var text = proc.StandardOutput.ReadToEnd();
+            if (!string.IsNullOrWhiteSpace(text))
+                foreach(var line in text.Split('\n'))
+                    LogInfo($"O > {line}");
+
+            text = proc.StandardError.ReadToEnd();
+            if (!string.IsNullOrWhiteSpace(text))
+                foreach (var line in text.Split('\n'))
+                    LogError($"O > {line}");
+#endif
+
+            proc.WaitForExit();
         }
     }
 }
