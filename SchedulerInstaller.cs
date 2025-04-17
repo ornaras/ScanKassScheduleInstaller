@@ -63,7 +63,6 @@ namespace ScanKass
         internal static void LogWarning(string text, Exception ex = null) => Logging?.Invoke(1, text, ex);
         internal static void LogInfo(string text) => Logging?.Invoke(0, text, null);
 
-        private static Guid guidASPNet = new Guid(Constants.GuidAspNet);
         private static Guid guidHostBundle = new Guid(Constants.GuidHostBundle);
         private static Guid guidWebDeploy = new Guid(Constants.GuidWebDeploy);
 
@@ -82,14 +81,6 @@ namespace ScanKass
                     "WAS-NetFxEnvironment", "WAS-ConfigurationAPI");
 
                 var http = new HttpClient();
-
-                LogInfo("Поиск ASP.Net Core 6.0.36...");
-                if (!guidASPNet.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry64))
-                {
-                    pathASPNet = await http.DownloadAsync(Constants.UrlAspNet);
-                    LogInfo("Установка ASP.Net Core 6.0.36...");
-                    RunEXE(pathASPNet);
-                }
 
                 LogInfo("Поиск Hosting Bundle 6.0.36...");
                 if (!guidHostBundle.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32))

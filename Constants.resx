@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="GuidAspNet" xml:space="preserve">
-    <value>215198BD-8EE1-385D-8194-0D3FF304296D</value>
-  </data>
   <data name="GuidHostBundle" xml:space="preserve">
     <value>040F8B83-B3BA-303A-A5BC-FE3E7FC0093B</value>
   </data>

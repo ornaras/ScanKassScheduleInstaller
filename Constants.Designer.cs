@@ -61,15 +61,6 @@ namespace ScanKass {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на 215198BD-8EE1-385D-8194-0D3FF304296D.
-        /// </summary>
-        internal static string GuidAspNet {
-            get {
-                return ResourceManager.GetString("GuidAspNet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Ищет локализованную строку, похожую на 040F8B83-B3BA-303A-A5BC-FE3E7FC0093B.
         /// </summary>
         internal static string GuidHostBundle {
