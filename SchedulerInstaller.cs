@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ScanKass
@@ -151,7 +152,19 @@ namespace ScanKass
         }
 
         private static void RunEXE(string path) => Run(path, "/install /quiet /norestart");
-        private static void RunMSI(string path) => Run("msiexec", $"/i {path} /quiet /norestart");
+        private static void RunMSI(string path)
+        {
+            const string nameMutex = "Global\\_MSIExecute";
+            do
+            {
+                if(Mutex.TryOpenExisting(nameMutex, out _))
+                {
+                    Run("msiexec", $"/i {path} /quiet /norestart");
+                    break;
+                }
+                Thread.Sleep(1000);
+            } while (Mutex.TryOpenExisting(nameMutex, out _));
+        }
         private static void RunAppcmd(string args) => Run(Constants.PathInetcmd, args);
         private static string Unzip(string path)
         {
