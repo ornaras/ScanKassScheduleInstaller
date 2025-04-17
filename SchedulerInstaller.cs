@@ -105,8 +105,6 @@ namespace ScanKass
                 LogInfo("Настройка работы сайта...");
                 RunAppcmd("add apppool /name:ScanKass /processModel.identityType:LocalSystem");
                 RunAppcmd("set app SkatWorkerAPI/ /applicationPool:ScanKass");
-                LogInfo("Запуск сайта...");
-                RunAppcmd("start site SkatWorkerAPI");
 
                 var urlLatest = await http.GetLatestReleaseAsync();
                 pathLatest = await http.DownloadAsync(urlLatest);
@@ -115,6 +113,9 @@ namespace ScanKass
                 Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
 
                 Configure();
+
+                LogInfo("Запуск сайта...");
+                RunAppcmd("start site SkatWorkerAPI");
 
                 OnDone?.Invoke(true);
                 LogInfo("Установка планировщика завершена!");
