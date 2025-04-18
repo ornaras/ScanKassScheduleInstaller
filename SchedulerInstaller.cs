@@ -94,7 +94,7 @@ namespace ScanKass
                 {
                     pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
                     LogInfo("Установка Hosting Bundle 6.0.36...");
-                    RunEXE(pathHostBundle);
+                    Run(pathHostBundle, "/install /quiet /norestart");
                 }
 
                 LogInfo("Поиск Microsoft Web Deploy 4.0...");
@@ -158,7 +158,6 @@ namespace ScanKass
             Run(Environment.Is64BitOperatingSystem ? Constants.PathDism64 : Constants.PathDism, args.ToString());
         }
 
-        private static void RunEXE(string path) => Run(path, "/install /quiet /norestart");
         private static void RunMSI(string path)
         {
             const string nameMutex = "Global\\_MSIExecute";
