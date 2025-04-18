@@ -84,8 +84,8 @@ namespace ScanKass
             try
             {
                 LogInfo("Активация дополнительных компонентов Windows...");
-                EnableFeatures("IIS-WebServerRole", "WAS-WindowsActivationService", "WAS-ProcessModel",
-                    "WAS-NetFxEnvironment", "WAS-ConfigurationAPI");
+                EnableFeatures("IIS-WebServerRole", "WAS-WindowsActivationService", 
+                    "WAS-ProcessModel", "WAS-ConfigurationAPI");
 
                 var http = new HttpClient();
 
@@ -102,7 +102,7 @@ namespace ScanKass
                     Run(pathHostBundle, "/repair /quiet /norestart");
                 }
 
-                LogInfo("Поиск Microsoft Web Deploy 4.0...");
+                    LogInfo("Поиск Microsoft Web Deploy 4.0...");
                 if (!guidWebDeploy.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32) &&
                     !guidWebDeploy.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry64))
                 {
@@ -218,7 +218,7 @@ namespace ScanKass
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
 #endif
-            };
+                };
             var proc = new Process(){ StartInfo = pInfo };
             proc.Start();
 
