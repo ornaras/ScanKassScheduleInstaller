@@ -90,11 +90,16 @@ namespace ScanKass
                 var http = new HttpClient();
 
                 LogInfo("Поиск Hosting Bundle 6.0.36...");
+                pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
                 if (!guidHostBundle.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32))
                 {
-                    pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
                     LogInfo("Установка Hosting Bundle 6.0.36...");
                     Run(pathHostBundle, "/install /quiet /norestart");
+                }
+                else
+                {
+                    LogInfo("Восстановление Hosting Bundle 6.0.36...");
+                    Run(pathHostBundle, "/repair /quiet /norestart");
                 }
 
                 LogInfo("Поиск Microsoft Web Deploy 4.0...");
