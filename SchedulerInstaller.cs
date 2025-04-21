@@ -89,27 +89,16 @@ namespace ScanKass
 
                 var http = new HttpClient();
 
-                LogInfo("Поиск Hosting Bundle 6.0.36...");
                 pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
-                if (!guidHostBundle.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32))
-                {
-                    LogInfo("Установка Hosting Bundle 6.0.36...");
-                    Run(pathHostBundle, "/install /quiet /norestart");
-                }
-                else
-                {
-                    LogInfo("Восстановление Hosting Bundle 6.0.36...");
-                    Run(pathHostBundle, "/repair /quiet /norestart");
-                }
 
-                    LogInfo("Поиск Microsoft Web Deploy 4.0...");
-                if (!guidWebDeploy.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry32) &&
-                    !guidWebDeploy.ExistsAppByGuid(Microsoft.Win32.RegistryView.Registry64))
-                {
-                    pathWebDeploy = await http.DownloadAsync(string.Format(Constants.UrlWebDeploy, Environment.Is64BitOperatingSystem ? "amd64" : "x86"));
-                    LogInfo("Установка Microsoft Web Deploy 4.0...");
-                    RunMSI(pathWebDeploy);
-                }
+                LogInfo("Установка Hosting Bundle 6.0.36...");
+                Run(pathHostBundle, "/install /quiet /norestart");
+                LogInfo("Коррекция Hosting Bundle 6.0.36...");
+                Run(pathHostBundle, "/repair /quiet /norestart");
+
+                pathWebDeploy = await http.DownloadAsync(string.Format(Constants.UrlWebDeploy, Environment.Is64BitOperatingSystem ? "amd64" : "x86"));
+                LogInfo("Установка Microsoft Web Deploy 4.0...");
+                RunMSI(pathWebDeploy);
 
                 LogInfo("Регистрация сайта в IIS...");
                 RunAppcmd($"add site /name:SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}: /physicalPath:{Constants.PathDir}");

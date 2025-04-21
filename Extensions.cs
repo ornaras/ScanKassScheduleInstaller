@@ -33,13 +33,6 @@ namespace ScanKass
             }
         }
 
-        internal static bool ExistsAppByGuid(this Guid guid, RegistryView view)
-        {
-            using (var HKLM = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, "", view))
-            using (var uninstall = HKLM.OpenSubKey($@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{guid:B}"))
-                return !(uninstall is null);
-        }
-
         internal static async Task<string> GetLatestReleaseAsync(this HttpClient http)
         {
             SchedulerInstaller.LogInfo("Получение ссылки на последнюю версию планировщика...");
