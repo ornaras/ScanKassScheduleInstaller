@@ -105,12 +105,19 @@ namespace ScanKass
                 LogInfo("Настройка работы сайта...");
                 RunAppcmd("add apppool /name:ScanKass /processModel.identityType:LocalSystem");
                 RunAppcmd("set app SkatWorkerAPI/ /applicationPool:ScanKass");
+                RunAppcmd("stop site SkatWorkerAPI");
+
+                LogInfo("Проверка и корректировка настроек сайта...");
+                RunAppcmd($"set site SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}:");
 
                 var urlLatest = await http.GetLatestReleaseAsync();
                 pathLatest = await http.DownloadAsync(urlLatest);
                 pathScript = Unzip(pathLatest);
                 LogInfo("Развертывание планировщика...");
                 Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
+
+                LogInfo("Запуск сайта...");
+                RunAppcmd("start site SkatWorkerAPI");
 
                 Configure();
 
