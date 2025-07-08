@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Загрузка файлов
         uses: actions/checkout@v4
@@ -16,11 +18,9 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Сборка релизной версии
         run: dotnet build -c Release
-      - name: Выгрузка в NuGet
-        run: dotnet nuget push ./bin/Release/*.nupkg --source https://nuget.pkg.github.com/ornaras/index.json --api-key ${{ secrets.GH_PUSH_NUGET }}
       - name: Выгрузка в Releases
         uses: softprops/action-gh-release@v1
         with:
           files: bin/Release/netstandard2.0/ScanKass.SchedulerInstaller.dll
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PUSH_NUGET }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
