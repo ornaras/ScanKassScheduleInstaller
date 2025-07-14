@@ -97,8 +97,6 @@ namespace ScanKass
 
                 LogInfo("Установка Hosting Bundle 6.0.36...");
                 Run(pathHostBundle, "/install /quiet /norestart");
-                LogInfo("Коррекция Hosting Bundle 6.0.36...");
-                Run(pathHostBundle, "/repair /quiet /norestart");
 
                 pathWebDeploy = await http.DownloadAsync(Constants.UrlWebDeploy);
                 LogInfo("Установка Microsoft Web Deploy 4.0...");
