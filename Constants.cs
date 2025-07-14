@@ -14,6 +14,6 @@
         public const string UrlAspNet = "https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe";
         public const string UrlHostBundle = "https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe";
         public const string UrlWebDeploy = "https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/WebDeploy_{0}_ru-RU.msi";
-        public const string UserAgent = "curl";
+        public const string UserAgent = "ScanKass";
     }
 }
