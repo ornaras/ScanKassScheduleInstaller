@@ -30,5 +30,8 @@ namespace ScanKass
                 return null;
             }
         }
+
+        internal static ulong ToUnixTimestamp(this DateTime dt) =>
+            (ulong)(dt - Constants.UnixEpoch).TotalSeconds;
     }
 }

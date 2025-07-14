@@ -30,6 +30,7 @@ namespace ScanKass
                     LogWarning($"Планировщик не установлен: не найден файл {path}");
                     return false;
                 }
+                var file = new FileInfo(Path.Combine(Constants.PathDir, "SkatWorkerAPI.exe"));
                 using (var http = new HttpClient())
                 {
                     try
@@ -43,6 +44,12 @@ namespace ScanKass
                         return false;
                     }
                 }
+                if (file.LastWriteTimeUtc.ToUnixTimestamp() != Constants.LastWriteFile)
+                {
+                    LogWarning($"Планировщик устарел");
+                    return false;
+                }
+                LogWarning($"Планировщик установлен");
                 return true;
             }
         }
