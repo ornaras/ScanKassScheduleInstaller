@@ -14,5 +14,12 @@ namespace ScanKass
         public const string UrlHostBundle = "https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe";
         public static string UrlWebDeploy = $"https://download.microsoft.com/download/b/d/8/bd882ec4-12e0-481a-9b32-0fae8e3c0b78/WebDeploy_{(Environment.Is64BitOperatingSystem ? "amd64" : "x86")}_ru-RU.msi";
         public const string UserAgent = "ScanKass";
+
+        #region Информация о репозитории планировщика
+        public const string RepoOwner = "StarkovVV18";
+        public const string RepoName = "SkatWorker";
+        public const string RepoTag = "debug_02032025";
+        public const string RepoFile = "SkatWorkerPublish.zip";
+        #endregion
     }
 }

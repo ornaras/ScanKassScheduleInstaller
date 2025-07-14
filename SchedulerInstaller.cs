@@ -107,7 +107,8 @@ namespace ScanKass
                 LogInfo("Проверка и корректировка настроек сайта...");
                 RunAppcmd($"set site SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}:");
 
-                var urlLatest = await http.GetLatestReleaseAsync();
+                var urlLatest = string.Format("https://github.com/{0}/{1}/releases/download/{2}/{3}",
+                    Constants.RepoOwner, Constants.RepoName, Constants.RepoTag, Constants.RepoFile);
                 pathLatest = await http.DownloadAsync(urlLatest);
                 pathScript = Unzip(pathLatest);
                 LogInfo("Развертывание планировщика...");
