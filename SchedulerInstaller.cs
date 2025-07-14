@@ -30,6 +30,7 @@ namespace ScanKass
                     LogWarning($"Планировщик не установлен: не найден файл {path}");
                     return false;
                 }
+                var file = new FileInfo(Path.Combine(Constants.PathDir, "SkatWorkerAPI.exe"));
                 using (var http = new HttpClient())
                 {
                     try
@@ -43,6 +44,12 @@ namespace ScanKass
                         return false;
                     }
                 }
+                if (file.LastWriteTimeUtc.ToUnixTimestamp() != Constants.LastWriteFile)
+                {
+                    LogWarning($"Планировщик устарел");
+                    return false;
+                }
+                LogWarning($"Планировщик установлен");
                 return true;
             }
         }
@@ -63,9 +70,6 @@ namespace ScanKass
         internal static void LogError(string text, Exception ex = null) => Logging?.Invoke(2, text, ex);
         internal static void LogWarning(string text, Exception ex = null) => Logging?.Invoke(1, text, ex);
         internal static void LogInfo(string text) => Logging?.Invoke(0, text, null);
-
-        private static Guid guidHostBundle = new Guid(Constants.GuidHostBundle);
-        private static Guid guidWebDeploy = new Guid(Constants.GuidWebDeploy);
 
         /// <summary>
         /// Установка планировщика
@@ -96,7 +100,7 @@ namespace ScanKass
                 LogInfo("Коррекция Hosting Bundle 6.0.36...");
                 Run(pathHostBundle, "/repair /quiet /norestart");
 
-                pathWebDeploy = await http.DownloadAsync(string.Format(Constants.UrlWebDeploy, Environment.Is64BitOperatingSystem ? "amd64" : "x86"));
+                pathWebDeploy = await http.DownloadAsync(Constants.UrlWebDeploy);
                 LogInfo("Установка Microsoft Web Deploy 4.0...");
                 RunMSI(pathWebDeploy);
 
@@ -110,7 +114,8 @@ namespace ScanKass
                 LogInfo("Проверка и корректировка настроек сайта...");
                 RunAppcmd($"set site SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}:");
 
-                var urlLatest = await http.GetLatestReleaseAsync();
+                var urlLatest = string.Format("https://github.com/{0}/{1}/releases/download/{2}/{3}",
+                    Constants.RepoOwner, Constants.RepoName, Constants.RepoTag, Constants.RepoFile);
                 pathLatest = await http.DownloadAsync(urlLatest);
                 pathScript = Unzip(pathLatest);
                 LogInfo("Развертывание планировщика...");
@@ -156,7 +161,7 @@ namespace ScanKass
             var args = new StringBuilder("/online /NoRestart /enable-feature");
             foreach (var feature in features)
                 args.Append($" /featurename:{feature}");
-            Run(Environment.Is64BitOperatingSystem ? Constants.PathDism64 : Constants.PathDism, args.ToString());
+            Run(Constants.PathDism, args.ToString());
         }
 
         private static void RunMSI(string path)
