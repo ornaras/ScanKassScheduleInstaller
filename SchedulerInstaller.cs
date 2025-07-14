@@ -96,7 +96,7 @@ namespace ScanKass
                 LogInfo("Коррекция Hosting Bundle 6.0.36...");
                 Run(pathHostBundle, "/repair /quiet /norestart");
 
-                pathWebDeploy = await http.DownloadAsync(string.Format(Constants.UrlWebDeploy, Environment.Is64BitOperatingSystem ? "amd64" : "x86"));
+                pathWebDeploy = await http.DownloadAsync(Constants.UrlWebDeploy);
                 LogInfo("Установка Microsoft Web Deploy 4.0...");
                 RunMSI(pathWebDeploy);
 
