@@ -151,15 +151,6 @@ namespace ScanKass {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на https://api.github.com/repos/StarkovVV18/SkatWorker/releases.
-        /// </summary>
-        internal static string UrlGitLatest {
-            get {
-                return ResourceManager.GetString("UrlGitLatest", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Ищет локализованную строку, похожую на https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe.
         /// </summary>
         internal static string UrlHostBundle {

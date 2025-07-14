@@ -147,9 +147,6 @@
   <data name="UrlAspNet" xml:space="preserve">
     <value>https://download.visualstudio.microsoft.com/download/pr/8cfa7f46-88f2-4521-a2d8-59b827420344/447de18a48115ac0fe6f381f0528e7a5/aspnetcore-runtime-6.0.36-win-x86.exe</value>
   </data>
-  <data name="UrlGitLatest" xml:space="preserve">
-    <value>https://api.github.com/repos/StarkovVV18/SkatWorker/releases</value>
-  </data>
   <data name="UrlHostBundle" xml:space="preserve">
     <value>https://download.visualstudio.microsoft.com/download/pr/9b8253ef-554d-4636-b708-e154c0199ce5/f3673dd1f2dc80e5b0505cbd2d4bd5d2/dotnet-hosting-6.0.36-win.exe</value>
   </data>
