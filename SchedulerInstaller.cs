@@ -64,9 +64,6 @@ namespace ScanKass
         internal static void LogWarning(string text, Exception ex = null) => Logging?.Invoke(1, text, ex);
         internal static void LogInfo(string text) => Logging?.Invoke(0, text, null);
 
-        private static Guid guidHostBundle = new Guid(Constants.GuidHostBundle);
-        private static Guid guidWebDeploy = new Guid(Constants.GuidWebDeploy);
-
         /// <summary>
         /// Установка планировщика
         /// </summary>

@@ -4,8 +4,6 @@ namespace ScanKass
 {
     internal static class Constants
     {
-        public const string GuidHostBundle = "040F8B83-B3BA-303A-A5BC-FE3E7FC0093B";
-        public const string GuidWebDeploy = "82FD8C73-C24D-433C-85A9-48AE93570410";
         public const string PathCmd = "C:\\Windows\\system32\\cmd.exe";
         public const string PathDir = "C:\\ScanKass\\WORKFLOW";
         public static string PathDism = $"C:\\Windows\\{(Environment.Is64BitOperatingSystem ? "SysNative" : "system32")}\\dism.exe";
