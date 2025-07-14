@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace ScanKass
 {
@@ -93,16 +94,19 @@ namespace ScanKass
 
                 var http = new HttpClient();
 
-                pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
+                if (CheckModuleIIS("IIS AspNetCore Module V2"))
+                {
+                    pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
+                    LogInfo("Установка Hosting Bundle 6.0.36...");
+                    Run(pathHostBundle, "/install /quiet /norestart");
+                }
 
-                LogInfo("Установка Hosting Bundle 6.0.36...");
-                Run(pathHostBundle, "/install /quiet /norestart");
-                LogInfo("Коррекция Hosting Bundle 6.0.36...");
-                Run(pathHostBundle, "/repair /quiet /norestart");
-
-                pathWebDeploy = await http.DownloadAsync(Constants.UrlWebDeploy);
-                LogInfo("Установка Microsoft Web Deploy 4.0...");
-                RunMSI(pathWebDeploy);
+                if (CheckModuleIIS("MSDeploy"))
+                {
+                    pathWebDeploy = await http.DownloadAsync(Constants.UrlWebDeploy);
+                    LogInfo("Установка Microsoft Web Deploy 4.0...");
+                    RunMSI(pathWebDeploy);
+                }
 
                 LogInfo("Регистрация сайта в IIS...");
                 RunAppcmd($"add site /name:SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}: /physicalPath:{Constants.PathDir}");
@@ -236,6 +240,19 @@ namespace ScanKass
 #endif
 
             proc.WaitForExit();
+        }
+
+        internal static bool CheckModuleIIS(string module)
+        {
+            using (var root = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\IIS Extensions"))
+            {
+                if (root is null) return false;
+                using (var _module = root.OpenSubKey(module))
+                {
+                    if (_module is null) return false;
+                    return (int?)_module.GetValue("Install") == 1;
+                }
+            }
         }
     }
 }
