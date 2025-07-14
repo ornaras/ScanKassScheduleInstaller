@@ -156,7 +156,7 @@ namespace ScanKass
             var args = new StringBuilder("/online /NoRestart /enable-feature");
             foreach (var feature in features)
                 args.Append($" /featurename:{feature}");
-            Run(Environment.Is64BitOperatingSystem ? Constants.PathDism64 : Constants.PathDism, args.ToString());
+            Run(Constants.PathDism, args.ToString());
         }
 
         private static void RunMSI(string path)

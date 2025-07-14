@@ -8,8 +8,7 @@ namespace ScanKass
         public const string GuidWebDeploy = "82FD8C73-C24D-433C-85A9-48AE93570410";
         public const string PathCmd = "C:\\Windows\\system32\\cmd.exe";
         public const string PathDir = "C:\\ScanKass\\WORKFLOW";
-        public const string PathDism = "C:\\Windows\\system32\\dism.exe";
-        public const string PathDism64 = "C:\\Windows\\SysNative\\dism.exe";
+        public static string PathDism = $"C:\\Windows\\{(Environment.Is64BitOperatingSystem ? "SysNative" : "system32")}\\dism.exe";
         public const string PathInetcmd = "C:\\Windows\\system32\\inetsrv\\appcmd.exe";
         public const string PathLog = "C:\\ScanKass\\LOG";
         public const string TcpPort = "16160";
