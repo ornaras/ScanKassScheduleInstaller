@@ -6,25 +6,6 @@ on:
       - created
 
 jobs:
-  install-dotnet:
-    name: Установка .NET
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Кеширование
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: /usr/share/dotnet/
-        key: ubuntu-dotnet
-        restore-keys: ubuntu-dotnet
-    - name: Вывод результата для остальных стадий
-      id: cache-hit
-      run: echo '${{ steps.cache.outputs.cache-hit }}' >> $GITHUB_OUTPUT
-    - name: Установка .NET
-      if: steps.cache.outputs.cache-hit != 'true'
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '5'
   get-gist:
     name: Получение информации для сборок
     runs-on: ubuntu-22.04
@@ -42,7 +23,6 @@ jobs:
   release: 
     name: Сборка в релиз
     needs: 
-      - install-dotnet
       - get-gist
     runs-on: ubuntu-22.04
     permissions:
@@ -55,9 +35,16 @@ jobs:
         date: ${{ fromJson(needs.get-gist.outputs.response).date }}
     steps:
     - name: Клонирование репозитория
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4      
+    - name: Кеширование
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: /usr/share/dotnet/
+        key: ubuntu-dotnet
+        restore-keys: ubuntu-dotnet
     - name: Установка .NET
-      if: needs.install-dotnet.outputs.cache-hit != 'true'
+      if: steps.cache.outputs.cache-hit != 'true'
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '5'
