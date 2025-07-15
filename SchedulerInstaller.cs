@@ -244,7 +244,8 @@ namespace ScanKass
 
         internal static bool CheckModuleIIS(string module)
         {
-            using (var root = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\IIS Extensions"))
+            using (var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
+                .OpenSubKey(@"SOFTWARE\Microsoft\IIS Extensions"))
             {
                 if (root is null) return false;
                 using (var _module = root.OpenSubKey(module))
