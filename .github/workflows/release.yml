@@ -46,7 +46,7 @@ jobs:
         sed -i "s/LastWriteFile = 0;/LastWriteFile = ${{ matrix.unix }};/" Constants.cs
         sed -i "s/debug/${{ matrix.tag }}/" Constants.cs
     - name: Сборка релиза
-      run: dotnet build -c Release -o 
+      run: dotnet build -c Release
     - name: Переименнование
       run: mv bin/Release/netstandard2.0/ScanKass.SchedulerInstaller.dll bin/Release/netstandard2.0/ScanKass.SchedulerInstaller-${{ matrix.date }}.dll
     - name: Публикация
