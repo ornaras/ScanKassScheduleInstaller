@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -89,8 +90,15 @@ namespace ScanKass
             try
             {
                 LogInfo("Активация дополнительных компонентов Windows...");
-                EnableFeatures("IIS-WebServerRole", "WAS-WindowsActivationService", 
-                    "WAS-ProcessModel", "WAS-ConfigurationAPI");
+                var features = new string[]
+                {
+                    "IIS-WebServerRole", 
+                    "WAS-WindowsActivationService",
+                    "WAS-ProcessModel", 
+                    "WAS-ConfigurationAPI"
+                };
+                FilterDisabledFeatures(features);
+                EnableFeatures(features);
 
                 var http = new HttpClient();
 
@@ -154,17 +162,30 @@ namespace ScanKass
             }
         }
 
+        private static void FilterDisabledFeatures(string[] features)
+        {
+            for(var i = 0; i < features.Length; i++)
+            {
+                var args = $"Get-WindowsOptionalFeature -Online -FeatureName " +
+                    $"{features[i]} | Where-Object {{$_.State -eq \"Disabled\"}}";
+                Run(Constants.PathPowerShell, args, out var @out, out _);
+                if (string.IsNullOrWhiteSpace(@out)) features[i] = null;
+            }
+        }
+
         private static void RemoveFile(string filepath)
         {
             if (!(filepath is null) && File.Exists(filepath))
                 File.Delete(filepath);
         }
 
-        private static void EnableFeatures(params string[] features)
+        private static void EnableFeatures(string[] features)
         {
+            if (features.All(i => string.IsNullOrWhiteSpace(i))) return;
             var args = new StringBuilder("/online /NoRestart /enable-feature");
             foreach (var feature in features)
-                args.Append($" /featurename:{feature}");
+                if(!string.IsNullOrWhiteSpace(feature))
+                    args.Append($" /featurename:{feature}");
             Run(Constants.PathDism, args.ToString());
         }
 
@@ -221,7 +242,7 @@ namespace ScanKass
                 Verb = "runas",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
-                };
+            };
             var proc = new Process(){ StartInfo = pInfo };
             proc.Start();
 
