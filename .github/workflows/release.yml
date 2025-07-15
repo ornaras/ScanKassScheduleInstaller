@@ -33,7 +33,7 @@ jobs:
       id: request
       uses: fjogeleit/http-request-action@v1
       with:
-        url: 'https://gist.githubusercontent.com/ornaras/ea6791dc8dccea16b2eef2c13d88bc8c/raw/6cdad2519132fa7a53b1874ed918031715c8eb34/skatworker-versions.json'
+        url: 'https://gist.githubusercontent.com/ornaras/ea6791dc8dccea16b2eef2c13d88bc8c/raw'
         method: 'GET'
         customHeaders: '{"UserAgent": "curl"}'
     - name: Получение HTTP-ответа
