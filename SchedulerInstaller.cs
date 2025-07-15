@@ -126,15 +126,18 @@ namespace ScanKass
                 LogInfo("Проверка и корректировка настроек сайта...");
                 RunAppcmd($"set site SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}:");
 
+                if (Directory.Exists(Constants.PathDir))
+                {
+                    LogInfo("Удаление устаревшей версии...");
+                    Directory.Delete(Constants.PathDir, true);
+                }
+
                 var urlLatest = string.Format("https://github.com/{0}/{1}/releases/download/{2}/{3}",
                     Constants.RepoOwner, Constants.RepoName, Constants.RepoTag, Constants.RepoFile);
                 pathLatest = await http.DownloadAsync(urlLatest);
                 pathScript = Unzip(pathLatest);
                 LogInfo("Развертывание планировщика...");
                 Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
-
-                if(Directory.Exists(Constants.PathDir))
-                    Directory.Delete(Constants.PathDir, true);
 
                 Configure();
 
