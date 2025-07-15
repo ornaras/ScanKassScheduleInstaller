@@ -133,8 +133,8 @@ namespace ScanKass
                 LogInfo("Развертывание планировщика...");
                 Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
 
-                LogInfo("Запуск сайта...");
-                RunAppcmd("start site SkatWorkerAPI");
+                if(Directory.Exists(Constants.PathDir))
+                    Directory.Delete(Constants.PathDir, true);
 
                 Configure();
 
