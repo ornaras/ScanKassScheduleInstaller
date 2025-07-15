@@ -56,6 +56,21 @@ namespace ScanKass
             }
         }
 
+        private static Encoding _batchEncoding;
+        internal static Encoding BatchEncoding
+        {
+            get
+            {
+                if (_batchEncoding is null) {
+                    Run(Constants.PathCmd, "/c chcp", out var @out, out _);
+                    var code = @out.Split(':')[1].Trim();
+                    _batchEncoding = int.TryParse(code, out var _code) ? 
+                        Encoding.GetEncoding(_code) : Encoding.GetEncoding(code);
+                }
+                return _batchEncoding;
+            }
+        }
+
         /// <summary>
         /// Событие логирования<br/>
         /// Параметры:<br/>
@@ -137,7 +152,7 @@ namespace ScanKass
                 pathLatest = await http.DownloadAsync(urlLatest);
                 pathScript = Unzip(pathLatest);
                 LogInfo("Развертывание планировщика...");
-                Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
+                Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y", BatchEncoding);
 
                 Configure();
 
@@ -189,7 +204,7 @@ namespace ScanKass
             foreach (var feature in features)
                 if(!string.IsNullOrWhiteSpace(feature))
                     args.Append($" /featurename:{feature}");
-            Run(Constants.PathDism, args.ToString());
+            Run(Constants.PathDism, args.ToString(), BatchEncoding);
         }
 
         private static void RunMSI(string path)
@@ -205,7 +220,8 @@ namespace ScanKass
                 Thread.Sleep(1000);
             } while (Mutex.TryOpenExisting(nameMutex, out _));
         }
-        private static void RunAppcmd(string args) => Run(Constants.PathInetcmd, args);
+        private static void RunAppcmd(string args) => 
+            Run(Constants.PathInetcmd, args, BatchEncoding);
         private static string Unzip(string path)
         {
             LogInfo($"Распаковка файла {Path.GetFileName(path)}...");
@@ -234,8 +250,9 @@ namespace ScanKass
             File.WriteAllText(path, json.ToString());
         }
 
-        internal static void Run(string program, string args, out string output, out string error)
+        internal static void Run(string program, string args, out string output, out string error, Encoding enc = null)
         {
+            if(enc is null) enc = Encoding.UTF8;
             LogInfo($"Запуск \"{program} {args}\"...");
 
             var pInfo = new ProcessStartInfo(program, args)
@@ -244,7 +261,9 @@ namespace ScanKass
                 CreateNoWindow = true,
                 Verb = "runas",
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                StandardErrorEncoding = enc,
+                StandardOutputEncoding = enc
             };
             var proc = new Process(){ StartInfo = pInfo };
             proc.Start();
@@ -255,9 +274,9 @@ namespace ScanKass
             proc.WaitForExit();
         }
 
-        internal static void Run(string path, string args)
+        internal static void Run(string path, string args, Encoding enc = null)
         {
-            Run(path, args, out var @out, out var err);
+            Run(path, args, out var @out, out var err, enc);
 
             if (!string.IsNullOrWhiteSpace(@out))
                 foreach (var line in @out.Split('\n'))
