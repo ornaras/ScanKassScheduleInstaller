@@ -56,6 +56,21 @@ namespace ScanKass
             }
         }
 
+        private static Encoding _batchEncoding;
+        internal static Encoding BatchEncoding
+        {
+            get
+            {
+                if (_batchEncoding is null) {
+                    Run(Constants.PathCmd, "/c chcp", out var @out, out _);
+                    var code = @out.Split(':')[1].Trim();
+                    _batchEncoding = int.TryParse(code, out var _code) ? 
+                        Encoding.GetEncoding(_code) : Encoding.GetEncoding(code);
+                }
+                return _batchEncoding;
+            }
+        }
+
         /// <summary>
         /// Событие логирования<br/>
         /// Параметры:<br/>
