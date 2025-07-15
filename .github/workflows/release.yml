@@ -34,16 +34,8 @@ jobs:
         include: ${{ fromJson(needs.get-gist.outputs.response) }}
     steps:
     - name: Клонирование репозитория
-      uses: actions/checkout@v4      
-    - name: Кеширование
-      id: cache
-      uses: actions/cache@v4
-      with:
-        path: /usr/share/dotnet/
-        key: ubuntu-dotnet
-        restore-keys: ubuntu-dotnet
+      uses: actions/checkout@v4
     - name: Установка .NET
-      if: steps.cache.outputs.cache-hit != 'true'
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '5'
