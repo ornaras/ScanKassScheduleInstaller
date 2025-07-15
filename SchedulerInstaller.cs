@@ -210,7 +210,7 @@ namespace ScanKass
             File.WriteAllText(path, json.ToString());
         }
 
-        internal static void Run(string program, string args)
+        internal static void Run(string program, string args, out string output, out string error)
         {
             LogInfo($"Запуск \"{program} {args}\"...");
 
@@ -219,27 +219,29 @@ namespace ScanKass
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 Verb = "runas",
-#if DEBUG
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
-#endif
                 };
             var proc = new Process(){ StartInfo = pInfo };
             proc.Start();
 
-#if DEBUG
-            var text = proc.StandardOutput.ReadToEnd();
-            if (!string.IsNullOrWhiteSpace(text))
-                foreach(var line in text.Split('\n'))
-                    LogInfo($"O > {line}");
-
-            text = proc.StandardError.ReadToEnd();
-            if (!string.IsNullOrWhiteSpace(text))
-                foreach (var line in text.Split('\n'))
-                    LogError($"O > {line}");
-#endif
+            output = proc.StandardOutput.ReadToEnd();
+            error = proc.StandardError.ReadToEnd();
 
             proc.WaitForExit();
+        }
+
+        internal static void Run(string path, string args)
+        {
+            Run(path, args, out var @out, out var err);
+
+            if (!string.IsNullOrWhiteSpace(@out))
+                foreach (var line in @out.Split('\n'))
+                    LogInfo($"O > {line}");
+
+            if (!string.IsNullOrWhiteSpace(err))
+                foreach (var line in err.Split('\n'))
+                    LogError($"O > {line}");
         }
 
         internal static bool CheckModuleIIS(string module)
