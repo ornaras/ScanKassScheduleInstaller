@@ -94,14 +94,14 @@ namespace ScanKass
 
                 var http = new HttpClient();
 
-                if (CheckModuleIIS("IIS AspNetCore Module V2"))
+                if (!CheckModuleIIS("IIS AspNetCore Module V2"))
                 {
                     pathHostBundle = await http.DownloadAsync(Constants.UrlHostBundle);
                     LogInfo("Установка Hosting Bundle 6.0.36...");
                     Run(pathHostBundle, "/install /quiet /norestart");
                 }
 
-                if (CheckModuleIIS("MSDeploy"))
+                if (!CheckModuleIIS("MSDeploy"))
                 {
                     pathWebDeploy = await http.DownloadAsync(Constants.UrlWebDeploy);
                     LogInfo("Установка Microsoft Web Deploy 4.0...");
