@@ -73,7 +73,7 @@ jobs:
       run: mv bin/Release/netstandard2.0/ScanKass.SchedulerInstaller.dll bin/Release/netstandard2.0/ScanKass.SchedulerInstaller-${{ matrix.date }}.dll
     - name: Публикация
       uses: softprops/action-gh-release@v1
-        with:
-          files: bin/Release/netstandard2.0/ScanKass.SchedulerInstaller-${{ matrix.date }}.dll
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: bin/Release/netstandard2.0/ScanKass.SchedulerInstaller-${{ matrix.date }}.dll
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
