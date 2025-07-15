@@ -10,7 +10,7 @@ namespace ScanKass
         #region Информация о репозитории планировщика
         public const string RepoOwner = "StarkovVV18";
         public const string RepoName = "SkatWorker";
-        public const string RepoTag = "debug_02032025";
+        public const string RepoTag = "debug";
         public const string RepoFile = "SkatWorkerPublish.zip";
         #endregion
 
@@ -31,7 +31,7 @@ namespace ScanKass
 
         #region Для определения версии планировщика
         public static DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0);
-        public static ulong LastWriteFile = 1740897436;
+        public static ulong LastWriteFile = 0;
         #endregion
     }
 }

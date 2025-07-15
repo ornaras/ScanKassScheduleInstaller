@@ -1,0 +1,79 @@
+name: Сборка релиза
+
+on:
+  release:
+    types: 
+      - created
+
+jobs:
+  install-dotnet:
+    name: Установка .NET
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Кеширование
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: /usr/share/dotnet/
+        key: ubuntu-dotnet
+        restore-keys: ubuntu-dotnet
+    - name: Вывод результата для остальных стадий
+      id: cache-hit
+      run: echo ${{ steps.cache.outputs.cache-hit }} >> $GITHUB_OUTPUT
+    - name: Установка .NET
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '5'
+  get-gist:
+    name: Получение информации для сборок
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Отправка GET-запроса
+      id: request
+      uses: fjogeleit/http-request-action@v1
+      with:
+        url: 'https://gist.githubusercontent.com/ornaras/ea6791dc8dccea16b2eef2c13d88bc8c/raw/6cdad2519132fa7a53b1874ed918031715c8eb34/skatworker-versions.json'
+        method: 'GET'
+        customHeaders: '{"UserAgent": "curl"}'
+    - name: Получение HTTP-ответа
+      id: response
+      run: echo ${{ steps.request.outputs.response }} >> $GITHUB_OUTPUT
+  release: 
+    name: Сборка в релиз
+    needs: 
+      - install-dotnet
+      - get-gist
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        unix: ${{ fromJson(needs.get-gist.outputs.response).unix }}
+        tag: ${{ fromJson(needs.get-gist.outputs.response).tags }}
+        patch: ${{ fromJson(needs.get-gist.outputs.response).patch }}
+        date: ${{ fromJson(needs.get-gist.outputs.response).date }}
+    steps:
+    - name: Клонирование репозитория
+      uses: actions/checkout@v4
+    - name: Установка .NET
+      if: needs.install-dotnet.outputs.cache-hit != 'true'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '5'
+    - name: Настройка проекта
+      run: sed -i "s/<\/PropertyGroup>/  <Version>$(echo $GITHUB_REF | grep -P "\d+\.\d+\.\d+" -o).${{ matrix.patch }}<\/Version>\n  <\/PropertyGroup>/" RetailCorrector.PluginAPI.csproj
+    - name: Настройка констант
+      run: |
+        sed -i "s/LastWriteFile = 0;/LastWriteFile = ${{ matrix.unix }};/" Constants.cs
+        sed -i "s/debug/${{ matrix.tag }}/" Constants.cs
+    - name: Сборка релиза
+      run: dotnet build -c Release -o 
+    - name: Переименнование
+      run: mv bin/Release/netstandard2.0/ScanKass.SchedulerInstaller.dll bin/Release/netstandard2.0/ScanKass.SchedulerInstaller-${{ matrix.date }}.dll
+    - name: Публикация
+      uses: softprops/action-gh-release@v1
+        with:
+          files: bin/Release/netstandard2.0/ScanKass.SchedulerInstaller-${{ matrix.date }}.dll
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
