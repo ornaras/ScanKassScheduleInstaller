@@ -48,7 +48,7 @@ jobs:
       with:
         dotnet-version: '5'
     - name: Настройка проекта
-      run: sed -i "s/<\/PropertyGroup>/  <Version>$(echo $GITHUB_REF | grep -P "\d+\.\d+\.\d+" -o).${{ matrix.index }}<\/Version>\n  <\/PropertyGroup>/" RetailCorrector.PluginAPI.csproj
+      run: sed -i "s/<\/PropertyGroup>/  <Version>$(echo $GITHUB_REF | grep -P "\d+\.\d+\.\d+" -o).${{ matrix.index }}<\/Version>\n  <\/PropertyGroup>/" SchedulerInstaller.csproj
     - name: Настройка констант
       run: |
         sed -i "s/LastWriteFile = 0;/LastWriteFile = ${{ matrix.unix }};/" Constants.cs
