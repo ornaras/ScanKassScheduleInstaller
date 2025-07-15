@@ -9,6 +9,8 @@ jobs:
   get-gist:
     name: Получение информации для сборок
     runs-on: ubuntu-22.04
+    outputs:
+      response: ${{ steps.response.outputs.data }}
     steps:
     - name: Отправка GET-запроса
       id: request
