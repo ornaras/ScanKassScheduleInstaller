@@ -19,7 +19,7 @@ jobs:
         restore-keys: ubuntu-dotnet
     - name: Вывод результата для остальных стадий
       id: cache-hit
-      run: echo ${{ steps.cache.outputs.cache-hit }} >> $GITHUB_OUTPUT
+      run: echo '${{ steps.cache.outputs.cache-hit }}' >> $GITHUB_OUTPUT
     - name: Установка .NET
       if: steps.cache.outputs.cache-hit != 'true'
       uses: actions/setup-dotnet@v4
@@ -38,7 +38,7 @@ jobs:
         customHeaders: '{"UserAgent": "curl"}'
     - name: Получение HTTP-ответа
       id: response
-      run: echo ${{ steps.request.outputs.response }} >> $GITHUB_OUTPUT
+      run: echo '${{ steps.request.outputs.response }}' >> $GITHUB_OUTPUT
   release: 
     name: Сборка в релиз
     needs: 
