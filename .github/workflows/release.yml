@@ -19,7 +19,7 @@ jobs:
         customHeaders: '{"UserAgent": "curl"}'
     - name: Получение HTTP-ответа
       id: response
-      run: echo '${{ steps.request.outputs.response }}' >> $GITHUB_OUTPUT
+      run: echo 'response=${{ steps.request.outputs.response }}' >> $GITHUB_OUTPUT
   release: 
     name: Сборка в релиз
     needs: 
