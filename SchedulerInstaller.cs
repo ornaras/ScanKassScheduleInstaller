@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -55,6 +56,21 @@ namespace ScanKass
             }
         }
 
+        private static Encoding _batchEncoding;
+        internal static Encoding BatchEncoding
+        {
+            get
+            {
+                if (_batchEncoding is null) {
+                    Run(Constants.PathCmd, "/c chcp", out var @out, out _);
+                    var code = @out.Split(':')[1].Trim();
+                    _batchEncoding = int.TryParse(code, out var _code) ? 
+                        Encoding.GetEncoding(_code) : Encoding.GetEncoding(code);
+                }
+                return _batchEncoding;
+            }
+        }
+
         /// <summary>
         /// Событие логирования<br/>
         /// Параметры:<br/>
@@ -89,8 +105,15 @@ namespace ScanKass
             try
             {
                 LogInfo("Активация дополнительных компонентов Windows...");
-                EnableFeatures("IIS-WebServerRole", "WAS-WindowsActivationService", 
-                    "WAS-ProcessModel", "WAS-ConfigurationAPI");
+                var features = new string[]
+                {
+                    "IIS-WebServerRole", 
+                    "WAS-WindowsActivationService",
+                    "WAS-ProcessModel", 
+                    "WAS-ConfigurationAPI"
+                };
+                FilterDisabledFeatures(features);
+                EnableFeatures(features);
 
                 var http = new HttpClient();
 
@@ -118,15 +141,18 @@ namespace ScanKass
                 LogInfo("Проверка и корректировка настроек сайта...");
                 RunAppcmd($"set site SkatWorkerAPI /bindings:http/*:{Constants.TcpPort}:");
 
+                if (Directory.Exists(Constants.PathDir))
+                {
+                    LogInfo("Удаление устаревшей версии...");
+                    Directory.Delete(Constants.PathDir, true);
+                }
+
                 var urlLatest = string.Format("https://github.com/{0}/{1}/releases/download/{2}/{3}",
                     Constants.RepoOwner, Constants.RepoName, Constants.RepoTag, Constants.RepoFile);
                 pathLatest = await http.DownloadAsync(urlLatest);
                 pathScript = Unzip(pathLatest);
                 LogInfo("Развертывание планировщика...");
-                Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y");
-
-                LogInfo("Запуск сайта...");
-                RunAppcmd("start site SkatWorkerAPI");
+                Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y", BatchEncoding);
 
                 Configure();
 
@@ -154,18 +180,31 @@ namespace ScanKass
             }
         }
 
+        private static void FilterDisabledFeatures(string[] features)
+        {
+            for(var i = 0; i < features.Length; i++)
+            {
+                var args = $"Get-WindowsOptionalFeature -Online -FeatureName " +
+                    $"{features[i]} | Where-Object {{$_.State -eq \"Disabled\"}}";
+                Run(Constants.PathPowerShell, args, out var @out, out _);
+                if (string.IsNullOrWhiteSpace(@out)) features[i] = null;
+            }
+        }
+
         private static void RemoveFile(string filepath)
         {
             if (!(filepath is null) && File.Exists(filepath))
                 File.Delete(filepath);
         }
 
-        private static void EnableFeatures(params string[] features)
+        private static void EnableFeatures(string[] features)
         {
+            if (features.All(i => string.IsNullOrWhiteSpace(i))) return;
             var args = new StringBuilder("/online /NoRestart /enable-feature");
             foreach (var feature in features)
-                args.Append($" /featurename:{feature}");
-            Run(Constants.PathDism, args.ToString());
+                if(!string.IsNullOrWhiteSpace(feature))
+                    args.Append($" /featurename:{feature}");
+            Run(Constants.PathDism, args.ToString(), BatchEncoding);
         }
 
         private static void RunMSI(string path)
@@ -181,7 +220,8 @@ namespace ScanKass
                 Thread.Sleep(1000);
             } while (Mutex.TryOpenExisting(nameMutex, out _));
         }
-        private static void RunAppcmd(string args) => Run(Constants.PathInetcmd, args);
+        private static void RunAppcmd(string args) => 
+            Run(Constants.PathInetcmd, args, BatchEncoding);
         private static string Unzip(string path)
         {
             LogInfo($"Распаковка файла {Path.GetFileName(path)}...");
@@ -210,8 +250,9 @@ namespace ScanKass
             File.WriteAllText(path, json.ToString());
         }
 
-        internal static void Run(string program, string args)
+        internal static void Run(string program, string args, out string output, out string error, Encoding enc = null)
         {
+            if(enc is null) enc = Encoding.UTF8;
             LogInfo($"Запуск \"{program} {args}\"...");
 
             var pInfo = new ProcessStartInfo(program, args)
@@ -219,27 +260,33 @@ namespace ScanKass
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 Verb = "runas",
-#if DEBUG
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
-#endif
-                };
+                RedirectStandardError = true,
+                StandardErrorEncoding = enc,
+                StandardOutputEncoding = enc
+            };
             var proc = new Process(){ StartInfo = pInfo };
             proc.Start();
 
-#if DEBUG
-            var text = proc.StandardOutput.ReadToEnd();
-            if (!string.IsNullOrWhiteSpace(text))
-                foreach(var line in text.Split('\n'))
-                    LogInfo($"O > {line}");
-
-            text = proc.StandardError.ReadToEnd();
-            if (!string.IsNullOrWhiteSpace(text))
-                foreach (var line in text.Split('\n'))
-                    LogError($"O > {line}");
-#endif
+            output = proc.StandardOutput.ReadToEnd();
+            error = proc.StandardError.ReadToEnd();
 
             proc.WaitForExit();
+        }
+
+        internal static void Run(string path, string args, Encoding enc = null)
+        {
+            Run(path, args, out var @out, out var err, enc);
+
+            if (!string.IsNullOrWhiteSpace(@out))
+                foreach (var line in @out.Split('\n'))
+                    if(!string.IsNullOrWhiteSpace(line))
+                        LogInfo($"O > {line.Trim()}");
+
+            if (!string.IsNullOrWhiteSpace(err))
+                foreach (var line in err.Split('\n'))
+                    if (!string.IsNullOrWhiteSpace(line))
+                        LogError($"O > {line.Trim()}");
         }
 
         internal static bool CheckModuleIIS(string module)

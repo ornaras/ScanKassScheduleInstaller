@@ -16,6 +16,7 @@ namespace ScanKass
 
         #region Пути
         public const string PathCmd = "C:\\Windows\\system32\\cmd.exe";
+        public const string PathPowerShell = "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe";
         public const string PathDir = "C:\\ScanKass\\WORKFLOW";
         public static string PathDism = $"C:\\Windows\\{(Environment.Is64BitOperatingSystem ? "SysNative" : "system32")}\\dism.exe";
         public const string PathInetcmd = "C:\\Windows\\system32\\inetsrv\\appcmd.exe";
