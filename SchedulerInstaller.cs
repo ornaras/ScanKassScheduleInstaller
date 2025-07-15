@@ -258,11 +258,13 @@ namespace ScanKass
 
             if (!string.IsNullOrWhiteSpace(@out))
                 foreach (var line in @out.Split('\n'))
-                    LogInfo($"O > {line}");
+                    if(!string.IsNullOrWhiteSpace(line))
+                        LogInfo($"O > {line.Trim()}");
 
             if (!string.IsNullOrWhiteSpace(err))
                 foreach (var line in err.Split('\n'))
-                    LogError($"O > {line}");
+                    if (!string.IsNullOrWhiteSpace(line))
+                        LogError($"O > {line.Trim()}");
         }
 
         internal static bool CheckModuleIIS(string module)
