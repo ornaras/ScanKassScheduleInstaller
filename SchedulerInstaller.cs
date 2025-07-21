@@ -104,6 +104,7 @@ namespace ScanKass
             LogInfo("Началась установка планировщика...");
             try
             {
+                string tempDir = null;
                 LogInfo("Активация дополнительных компонентов Windows...");
                 var features = new string[]
                 {
@@ -144,6 +145,12 @@ namespace ScanKass
                 if (Directory.Exists(Constants.PathDir))
                 {
                     LogInfo("Удаление устаревшей версии...");
+                    if (File.Exists(Path.Combine(Constants.PathDir, "db")))
+                    {
+                        tempDir = Path.Combine(Path.GetTempPath(), $"ScanKass-{Guid.NewGuid()}");
+                        Directory.CreateDirectory(tempDir);
+                        File.Copy(Path.Combine(Constants.PathDir, "db"), Path.Combine(tempDir, "db"));
+                    }
                     Directory.Delete(Constants.PathDir, true);
                 }
 
@@ -155,6 +162,12 @@ namespace ScanKass
                 Run(Path.Combine(pathScript, "SkatWorkerAPI.deploy.cmd"), "/Y", BatchEncoding);
 
                 Configure();
+
+                if (!(tempDir is null))
+                {
+                    File.Copy(Path.Combine(tempDir, "db"), Path.Combine(Constants.PathDir, "db"));
+                    Directory.Delete(tempDir, true);
+                }
 
                 LogInfo("Запуск сайта...");
                 RunAppcmd("start site SkatWorkerAPI");
