@@ -184,8 +184,8 @@ namespace ScanKass
         {
             for(var i = 0; i < features.Length; i++)
             {
-                var args = $"Get-WindowsOptionalFeature -Online -FeatureName " +
-                    $"{features[i]} | Where-Object {{$_.State -eq \"Disabled\"}}";
+                var args = $"-Command \"& {{Get-WindowsOptionalFeature -Online -FeatureName " +
+                    $"{features[i]} | Where-Object {{$_.State -eq \\\"Disabled\\\"}}}}\"";
                 Run(Constants.PathPowerShell, args, out var @out, out _);
                 if (string.IsNullOrWhiteSpace(@out)) features[i] = null;
             }
